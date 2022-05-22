@@ -1,0 +1,145 @@
+# LDAP directory implementation for YAML format
+
+## Why using YAML?
+Nowadays, I found that `YAML` is overused to configure things that sometimes requires more simple markup languages (`ini`, `txt`, ...),
+or mode specific DSL (like `hcl`). Of course, `YAML` is now a well known markup language and can be easily use by almost
+everyone.
+However, I personally chose `YAML` because it gives me a better representation of the directory structure;
+I picture an LDAP directory as a file directory, with folders (`containers`) and files (`leafs`). The fact that `YAML`
+uses indentation to define the depth of a field reminds me the `tree` command and helps me a lot in the global
+representation of the LDAP directory.
+
+## Syntax
+As explained above, I chose the `YAML` format because it allows the LDAP directory to be represented like this:
+
+```yaml
+dc:org: #dn: dc=org
+└── dc:example: #dn: dc=example,dc=org
+    ├── ou:group: #dn: ou=group,dc=example,dc=org
+    │   ├── cn:owner: #dn: cn=admin,ou=group,dc=example,dc=org      
+    │   ├── cn:dev: #dn: cn=dev,ou=group,dc=example,dc=org
+    │   ├── cn:qa: #dn: cn=qa,ou=group,dc=example,dc=org
+    │   └── cn:ok: #dn: cn=ok,ou=group,dc=example,dc=org
+    ├── c:global: #dn: c=global,dc=example,dc=org
+    │   └── ou:people: #dn: ou=people,c=global,dc=example,dc=org
+    │       ├── cn:alice: #dn: cn=alice,ou=people,c=global,dc=example,dc=org
+    │       └── cn:bob: #dn: cn=bob,ou=people,c=global,dc=example,dc=org
+    ├── c:fr: #dn: c=fr,dc=example,dc=org
+    │   └── ou:people: #dn: ou=people,c=fr,dc=example,dc=org
+    │       └── cn:charlie: #dn: cn=charlie,ou=people,c=fr,dc=example,dc=org
+    └── c:uk: #dn: c=uk,dc=example,dc=org
+        └── ou:people: #dn: ou=people,c=fr,dc=example,dc=org
+            └── cn:eve: #dn: cn=eve,ou=people,c=uk,dc=exa
+```
+
+### Rules of this syntax
+
+- A `LDAP` object is represented by a `YAML` mapping node
+  - All child `LDAP` objects are represented by `YAML` mappings nodes inside the parent `YAML` mapping node
+- A `LDAP` attribute is represented by a `YAML` sequence or scalar node
+  - All `YAML` scalar nodes will be converted into string
+  - `YAML` sequence nodes can only contain scalar or sequential nodes
+  - All `null` node will be ignored
+- Any `YAML` extension to add specific behavior will be done using `YAML` tags
+  - `!!ldap/bind:password` on an attribute will use this attribute as `bind` password
+    - **Only one password can be set per object**
+  - `!!ldap/acl:allow-on` allows the current object to search object inside the given DN
+    - Can be a scalar (one) or a sequence (several) node
+    - **These values are not stored inside the attribute**
+  - `!!ldap/acl:deny-on` denies the current object to search object inside the given DN
+    - Can be a scalar (one) or a sequence (several) node
+    - **These values are not stored inside the attribute**
+
+### Example
+
+```yaml
+  dc:example: #dn: dc=example,dc=org
+    ou:group: #dn: ou=group,dc=example,dc=org
+      cn:owner: &test #dn: cn=admin,ou=group,dc=example,dc=org      
+        objectclass: posixGroup
+        gidNumber: 1000
+        description: Organization owners
+        memberUid: [alice]
+      cn:dev: #dn: cn=dev,ou=group,dc=example,dc=org
+        objectclass: posixGroup
+        gidNumber: 1001
+        description: Organization developers
+        memberUid: [bob, charlie]
+      cn:qa: #dn: cn=qa,ou=group,dc=example,dc=org
+        objectclass: posixGroup
+        gidNumber: 1002
+        memberUid: [charlie, eve]
+      cn:ok: #dn: cn=ok,ou=group,dc=example,dc=org
+        <<: *test
+        gidNumber: 1003
+        description: Dummy group
+        # memberUid: [alice]
+
+    c:global: #dn: c=global,dc=example,dc=org
+      ou:people: #dn: ou=people,c=global,dc=example,dc=org
+        cn:alice: #dn: cn=alice,ou=people,c=global,dc=example,dc=org
+          objectclass: [posixAccount, UserMail]
+          .#acl:
+            - !!ldap/acl:allow-on dc=org # allow alice to request everything
+
+          description: Main organization admin
+          uid: alice
+          uidNumber: 1000
+          gidNumber: 1000
+          loginShell: /bin/bash
+          homeDirectory: /home/alice
+          userPassword: !!ldap/bind:password alice
+          usermail: alice@example.org
+
+        cn:bob: #dn: cn=bob,ou=people,c=global,dc=example,dc=org
+          objectclass: posixAccount
+          .#acl:
+            - !!ldap/acl:allow-on ou=group,dc=example,dc=org # allow bob request only for user groups
+
+          uid: bob
+          homeDirectory: /home/bob
+          uidNumber: 1001
+          gidNumber: 1001
+          userPassword: !!ldap/bind:password  bob
+
+    c:fr: #dn: c=fr,dc=example,dc=org
+      ou:people: #dn: ou=people,c=fr,dc=example,dc=org
+        cn:charlie: #dn: cn=charlie,ou=people,c=fr,dc=example,dc=org
+          objectclass: posixAccount
+          .#acl:
+            - !!ldap/acl:allow-on ou=group,dc=example,dc=org # allow charlie request for all groups...
+            - !!ldap/acl:deny-on cn=admin,ou=group,dc=example,dc=org # ...but  to owner group
+
+          uid: charlie
+          homeDirectory: /home/charlie
+          uidNumber: 1100
+          gidNumber: 1001
+          userPassword: !!ldap/bind:password charlie
+
+    c:uk: #dn: c=uk,dc=example,dc=org
+      ou:people: #dn: ou=people,c=fr,dc=example,dc=org
+        cn:eve: #dn: cn=eve,ou=people,c=uk,dc=example,dc=org
+          objectclass: posixAccount
+          #NOTE: eve can't make any LDAP request (no !!ldap/bind:password field)
+          uid: eve
+          homeDirectory: /home/eve
+          uidNumber: 1003
+          gidNumber: 1002
+          userPassword: eve
+```
+
+## RFCs
+### Go-templates (at boot/at runtime) (12/06/2022)
+Using `go-template` could be used to add some "smart" configurations and allows dynamic values like password. For example,
+we can store the password on Vault and use them directly inside the LDAP; customizations are easy (just need to add new 
+function) and as a security layer for sensitive information like password. It also adds the ability to update password
+without restarting/generating the LDAP directory.
+
+I suggest two mechanism:
+- `go-templating` during runtime, inside LDAP attribute. Just before generating the attribute values, we can interpolate
+  these dynamic values. To achieve this goal, we can make custom function to generate a go-template function that will
+  be called during runtime execution.
+- `go-templating` during the LDAP directory generation.
+
+### Schema generation (12/06/2022)
+Some LDAP tools needs metadata like `objectclass` and `attributes` definition. _Need more details_
