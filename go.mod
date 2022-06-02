@@ -6,7 +6,7 @@ require (
 	github.com/go-asn1-ber/asn1-ber v1.5.1
 	github.com/go-dedup/metaphone v0.0.0-20141025200009-5cea56e8d200
 	github.com/go-ldap/ldap/v3 v3.4.1
-	github.com/hashicorp/go-hclog v1.1.0
+	github.com/hashicorp/go-hclog v1.2.0
 	github.com/jimlambrt/gldap v0.1.2-0.20220601131836-ca63fe26ae66
 	github.com/moznion/go-optional v0.1.0
 	github.com/stretchr/testify v1.7.1
