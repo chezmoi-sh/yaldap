@@ -11,7 +11,7 @@ require (
 	github.com/moznion/go-optional v0.0.0-20220318202159-667a41a088a4
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
