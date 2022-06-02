@@ -3,7 +3,7 @@ module github.com/xunleii/yaldap
 go 1.18
 
 require (
-	github.com/go-asn1-ber/asn1-ber v1.5.1
+	github.com/go-asn1-ber/asn1-ber v1.5.4
 	github.com/go-dedup/metaphone v0.0.0-20141025200009-5cea56e8d200
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/hashicorp/go-hclog v1.1.0
