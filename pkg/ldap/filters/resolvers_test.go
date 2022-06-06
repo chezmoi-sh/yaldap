@@ -43,6 +43,8 @@ func (o mockLdapObject) Attribute(name string) (yaldaplib.Attribute, bool) {
 func (o mockLdapObject) Search(gldap.Scope, string) ([]yaldaplib.Object, error) {
 	return nil, nil
 }
+func (o mockLdapObject) Bind(string) Option[bool]   { return Some(true) }
+func (o mockLdapObject) CanAccessTo(dn string) bool { return true }
 
 type mockLdapAttribute []string
 

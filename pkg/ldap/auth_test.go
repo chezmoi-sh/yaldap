@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jimlambrt/gldap"
+	"github.com/moznion/go-optional"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,6 +20,8 @@ func (o mockLdapObject) Attribute(name string) (Attribute, bool) {
 	return Attributes(o).Attribute(name)
 }
 func (o mockLdapObject) Search(gldap.Scope, string) ([]Object, error) { return nil, nil }
+func (o mockLdapObject) Bind(string) optional.Option[bool]            { return optional.None[bool]() }
+func (o mockLdapObject) CanAccessTo(string) bool                      { return true }
 
 func Test_authConns_addAuthn(t *testing.T) {
 	conns := authnConns{}

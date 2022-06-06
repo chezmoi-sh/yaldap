@@ -1,6 +1,9 @@
 package ldap
 
-import "github.com/jimlambrt/gldap"
+import (
+	"github.com/jimlambrt/gldap"
+	"github.com/moznion/go-optional"
+)
 
 type (
 	// Directory contains all current LDAP object tree, accessible using a base DN.
@@ -21,6 +24,12 @@ type (
 		Search(scope gldap.Scope, filter string) ([]Object, error)
 		// Invalid returns true if the current object is not a valid LDAP object
 		Invalid() bool
+
+		// Bind returns true if the current object is able to authenticate and the password is correct.
+		// It returns false if the password is wrong and optional.None if it cannot be authenticated.
+		Bind(password string) optional.Option[bool]
+		// CanSearchOn returns true if the current object is able to perform a search on the given DB.
+		CanAccessTo(dn string) bool
 	}
 
 	// Attribute represents an LDAP attribute.

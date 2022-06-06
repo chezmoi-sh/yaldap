@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -9,8 +10,13 @@ import (
 )
 
 const (
-	// AttributePrefix is the prefix used to determine which YAML are LDAP attributes.
+	// AttributePrefix prefixes LDAP attributes.
 	AttributePrefix = ".@"
+	// PropertyPrefix prefixes all internal yaLDAP properties that used internally.
+	PropertyPrefix           = ".#"
+	PropertyBindPasswordAttr = PropertyPrefix + "BindPasswordAttr"
+	PropertyAllowedDN        = PropertyPrefix + "AllowedDN"
+	PropertyDeniedDN         = PropertyPrefix + "DeniedDN"
 )
 
 // ParseError describes a failure occurring during the parsing of the YAML definition.
@@ -35,6 +41,27 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*Object
 			continue
 		}
 
+		if strings.HasPrefix(key, PropertyPrefix) {
+			prop, err := parseAttributeValue(key, obj)
+			if err != nil {
+				return nil, ParseError(fmt.Errorf("failed to get property on %s: %w", dn, err))
+			}
+
+			switch key {
+			case PropertyBindPasswordAttr:
+				object.bindPasswords = prop.Values()
+			case PropertyAllowedDN:
+				fallthrough
+			case PropertyDeniedDN:
+				for _, dn := range prop.Values() {
+					object.acls = append(object.acls, objectAclRule{dn, key == PropertyAllowedDN})
+				}
+			default:
+				return nil, ParseError(fmt.Errorf("unkown property %s on %s", strings.TrimPrefix(key, PropertyPrefix), dn))
+			}
+			continue
+		}
+
 		obj, valid := obj.(map[string]interface{})
 		if !valid {
 			return nil, ParseError(fmt.Errorf("invalid field '%s' on %s: must be an object", key, dn))
@@ -56,6 +83,7 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*Object
 
 		object.children[key].attributes[sp[0]] = &Attribute{sp[1]}
 	}
+	sort.Sort(object.acls)
 	return object, nil
 }
 
