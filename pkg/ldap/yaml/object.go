@@ -2,21 +2,31 @@ package yaml
 
 import (
 	"fmt"
+	"strings"
 
 	ber "github.com/go-asn1-ber/asn1-ber"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
+	"github.com/moznion/go-optional"
 	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
-// Object implements the ldap.Object interface.
-type Object struct {
-	dn         string
-	attributes yaldaplib.Attributes
+type (
+	// Object implements the ldap.Object interface.
+	Object struct {
+		dn         string
+		attributes yaldaplib.Attributes
 
-	children map[string]*Object
-}
+		bindPasswords []string
+		acl           objectACL
+
+		children map[string]*Object
+	}
+
+	// objectACL contains the list of allowed DN on which the object can perform a search.
+	objectACL map[string]bool
+)
 
 func (o Object) DN() string                       { return o.dn }
 func (o Object) Attributes() yaldaplib.Attributes { return o.attributes }
@@ -63,6 +73,53 @@ func (o *Object) search(scope gldap.Scope, filter *ber.Packet) (objects []yaldap
 		}
 	}
 	return objects, nil
+}
+
+func (o Object) Bind(password string) optional.Option[bool] {
+	if o.bindPasswords == nil {
+		return optional.None[bool]()
+	}
+
+	for _, bindPassword := range o.bindPasswords {
+		attr, exist := o.Attribute(bindPassword)
+		if !exist || len(attr.Values()) == 0 {
+			continue
+		}
+
+		for _, attempt := range attr.Values() {
+			if attempt == password {
+				return optional.Some(true)
+			}
+		}
+	}
+
+	return optional.Some(false)
+}
+
+func (o Object) CanSearchOn(dn string) bool {
+	if o.acl == nil {
+		return false
+	}
+
+	allowed, exists := o.acl[dn]
+	if exists {
+		return allowed
+	}
+
+	maxDepth := strings.Count(dn, ",")
+	curDepth, permission := -1, false
+	for name, allowed := range o.acl {
+		depth := strings.Count(name, ",")
+
+		switch {
+		case depth > maxDepth:
+			continue
+		case strings.HasSuffix(dn, name) && depth > curDepth:
+			curDepth = depth
+			permission = allowed
+		}
+	}
+	return permission
 }
 
 // Attribute implements the ldap.Attribute interface.

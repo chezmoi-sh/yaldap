@@ -187,6 +187,177 @@ ou:people:
     boolean: {}
 `,
 			error: fmt.Errorf("invalid field 'boolean' on uid=alice,ou=people: should contains the object type (ou, cn, ...)")},
+
+		{name: "ValidPasswordBindProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#BindPasswordAttr: [password]
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								bindPasswords: []string{"password"},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+		{name: "ValidMultiPasswordBindProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#BindPasswordAttr: [password, userPasswd]
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								bindPasswords: []string{"password", "userPasswd"},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+		{name: "ValidEmptyPasswordBindProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#BindPasswordAttr: []
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+
+		{name: "ValidAllowedDNProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#AllowedDN: [ou=people, "ou=subgroup,dc=example,dc=org"]
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								acl: map[string]bool{"ou=people": true, "ou=subgroup,dc=example,dc=org": true},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+		{name: "ValidDeniedDNProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#DeniedDN: [ou=people, "ou=subgroup,dc=example,dc=org"]
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								acl: map[string]bool{"ou=people": false, "ou=subgroup,dc=example,dc=org": false},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+		{name: "ValidAllowedDeniedDNProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#AllowedDN: [ou=people]
+    .#DeniedDN: ["uid=alice,ou=people"]
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								acl: map[string]bool{"ou=people": true, "uid=alice,ou=people": false},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+		{name: "EmptyAllowedDeniedDNProperty",
+			yaml: `
+ou:people:
+  uid:alice:
+    .#AllowedDN: []
+    .#DeniedDN: []
+    .@password: alice
+`,
+			expect: __(Object{
+				children: map[string]*Object{
+					"ou=people": __(Object{dn: "ou=people",
+						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
+						children: map[string]*Object{
+							"uid=alice": __(Object{dn: "uid=alice,ou=people",
+								acl: map[string]bool{},
+								attributes: map[string]yaldaplib.Attribute{
+									"uid":      &Attribute{"alice"},
+									"password": &Attribute{"alice"},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
 	}
 
 	for _, tt := range tests {
