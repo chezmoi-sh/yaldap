@@ -1,4 +1,4 @@
-package naive
+package yaml
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNaiveDirectoryEntry_Search(t *testing.T) {
+func TestDirectoryEntry_Search(t *testing.T) {
 	yaml := `
 l1:a:
   .@attr1: true
