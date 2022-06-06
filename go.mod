@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-hclog v1.2.0
 	github.com/jimlambrt/gldap v0.1.2-0.20220601131836-ca63fe26ae66
 	github.com/moznion/go-optional v0.1.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	golang.org/x/exp v0.0.0-20220602145555-4a0574d9293f
 	gopkg.in/yaml.v3 v3.0.1
 )
