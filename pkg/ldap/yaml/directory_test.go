@@ -1,4 +1,4 @@
-package naive
+package yaml
 
 import (
 	"testing"
