@@ -21,7 +21,7 @@ func (o mockLdapObject) Attribute(name string) (Attribute, bool) {
 }
 func (o mockLdapObject) Search(gldap.Scope, string) ([]Object, error) { return nil, nil }
 func (o mockLdapObject) Bind(string) optional.Option[bool]            { return optional.None[bool]() }
-func (o mockLdapObject) CanSearchOn(string) bool                      { return true }
+func (o mockLdapObject) CanAccessTo(string) bool                      { return true }
 
 func Test_authConns_addAuthn(t *testing.T) {
 	conns := authnConns{}
