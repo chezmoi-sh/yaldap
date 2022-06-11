@@ -54,6 +54,15 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
+	bindable := obj.Bind(string(msg.Password))
+	if bindable.IsNone() {
+		resp.SetResultCode(gldap.ResultAuthUnknown)
+		return
+	} else if !bindable.IsSome() {
+		resp.SetResultCode(gldap.ResultInvalidCredentials)
+		return
+	}
+
 	err = s.authn.addAuthn(req.ConnectionID(), obj)
 	if err != nil {
 		resp.SetResultCode(gldap.ResultLocalError)
@@ -75,6 +84,11 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	obj := s.authn.getAuthn(req.ConnectionID())
 	if obj == nil {
+		resp.SetResultCode(gldap.ResultAuthorizationDenied)
+		return
+	}
+
+	if obj.CanSearchOn(msg.BaseDN) {
 		resp.SetResultCode(gldap.ResultAuthorizationDenied)
 		return
 	}
