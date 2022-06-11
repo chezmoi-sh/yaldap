@@ -56,7 +56,7 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	bindable := obj.Bind(string(msg.Password))
 	if bindable.IsNone() {
-		resp.SetResultCode(gldap.ResultAuthUnknown)
+		resp.SetResultCode(gldap.ResultInvalidCredentials)
 		return
 	} else if !bindable.IsSome() {
 		resp.SetResultCode(gldap.ResultInvalidCredentials)
@@ -88,11 +88,6 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
-	if obj.CanSearchOn(msg.BaseDN) {
-		resp.SetResultCode(gldap.ResultAuthorizationDenied)
-		return
-	}
-
 	entries, err := s.directory.BaseDN(msg.BaseDN).Search(msg.Scope, msg.Filter)
 	if err != nil {
 		resp.SetResultCode(gldap.ResultOperationsError)
@@ -101,11 +96,13 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 	}
 
 	for _, entry := range entries {
-		entry := req.NewSearchResponseEntry(
-			entry.DN(),
-			gldap.WithAttributes(entry.Attributes().ToMap()),
-		)
-		_ = w.Write(entry)
+		if obj.CanAccessTo(entry.DN()) {
+			entry := req.NewSearchResponseEntry(
+				entry.DN(),
+				gldap.WithAttributes(entry.Attributes().ToMap()),
+			)
+			_ = w.Write(entry)
+		}
 	}
 	resp.SetResultCode(gldap.ResultSuccess)
 }

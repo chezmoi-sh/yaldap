@@ -12,16 +12,20 @@ import (
 	"github.com/xunleii/yaldap/pkg/ldap/yaml"
 )
 
-type LdapMuxE2E struct {
+type YamlLdapMuxE2E struct {
 	suite.Suite
 	server *gldap.Server
 }
 
-func (e2e *LdapMuxE2E) SetupTest() {
+func (e2e *YamlLdapMuxE2E) SetupTest() {
 	e2e.server, _ = gldap.NewServer()
 }
 
-func (e2e *LdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
+func (e2e *YamlLdapMuxE2E) TearDownTest() {
+	_ = e2e.server.Stop()
+}
+
+func (e2e *YamlLdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
 	directory, err := yaml.NewDirectory([]byte(raw))
 	require.NoError(e2e.T(), err)
 
@@ -36,12 +40,16 @@ func (e2e *LdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
 	return conn
 }
 
-func (e2e *LdapMuxE2E) TestBind() {
+func (e2e *YamlLdapMuxE2E) TestBind() {
 	const yaml = `
 cn:alice:
+  .#BindPasswordAttr: [password]
   .@password: alice
+
+cn:bob: {}
 `
 	conn := e2e.bootstrapLdap(yaml)
+	defer conn.Close()
 
 	tests := []struct {
 		name     string
@@ -61,6 +69,10 @@ cn:alice:
 			dn:       "cn=alice",
 			password: "bob",
 			expect:   assert.Error},
+		{name: "NoPassword",
+			dn:       "cn=bob",
+			password: "bob",
+			expect:   assert.Error},
 	}
 
 	for _, tt := range tests {
@@ -71,18 +83,29 @@ cn:alice:
 	}
 }
 
-func (e2e *LdapMuxE2E) TestSearch() {
-	const yaml = `
+func (e2e *YamlLdapMuxE2E) TestSearch() {
+	const yaml string = `
 dc:org:
   dc:example:
     .@objectclass: [organisation]
 
     ou:people:
       cn:alice:
+        .#BindPasswordAttr: [userpassword]
+        .#AllowedDN: ["dc=example,dc=org", "cn=alice,ou=people,dc=example,dc=org"]
+        .#DeniedDN: ["dc=org", "ou=people,dc=example,dc=org"]
+
         .@objectclass: [person]
         .@userpassword: alice
+
+      cn:bob:
+        .@objectclass: [person]
+
+  dc:example2:
+    .@objectclass: [organisation]
 `
 	conn := e2e.bootstrapLdap(yaml)
+	defer conn.Close()
 
 	tests := []struct {
 		name   string
@@ -95,17 +118,17 @@ dc:org:
 			basedn: "dc=org",
 			scope:  ldap.ScopeWholeSubtree,
 			filter: "(cn=alice)",
-			result: 1},
+			result: 1}, // cn=alice,ou=people,dc=example,dc=org
 		{name: "FindAllObjectclass",
 			basedn: "dc=org",
 			scope:  ldap.ScopeWholeSubtree,
 			filter: "(objectclass=*)",
-			result: 2},
+			result: 2}, // cn=alice,ou=people,dc=example,dc=org & dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & dc=example2,dc=org rejected by ACL)
 		{name: "FindAllOuOrCn",
 			basedn: "dc=org",
 			scope:  ldap.ScopeWholeSubtree,
 			filter: "(|(ou=*)(cn=*))",
-			result: 2},
+			result: 1}, // cn=alice,ou=people,dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & ou=people,dc=example,dc=org rejected by ACL)
 
 		{name: "InvalidDN",
 			basedn: "dc=alice",
@@ -133,11 +156,13 @@ dc:org:
 	}
 }
 
-func (e2e *LdapMuxE2E) TestAdd() {
+func (e2e *YamlLdapMuxE2E) TestAdd() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
-  .@userpassword: alice
+ .#BindPasswordAttr: [password]
+ .@userpassword: alice
 `)
+	defer conn.Close()
 
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
@@ -146,11 +171,13 @@ cn:alice:
 	e2e.Error(err)
 }
 
-func (e2e *LdapMuxE2E) TestModify() {
+func (e2e *YamlLdapMuxE2E) TestModify() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
-  .@userpassword: alice
+ .#BindPasswordAttr: [password]
+ .@userpassword: alice
 `)
+	defer conn.Close()
 
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
@@ -159,11 +186,13 @@ cn:alice:
 	e2e.Error(err)
 }
 
-func (e2e *LdapMuxE2E) TestDelete() {
+func (e2e *YamlLdapMuxE2E) TestDelete() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
-  .@userpassword: alice
+ .#BindPasswordAttr: [password]
+ .@userpassword: alice
 `)
+	defer conn.Close()
 
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
@@ -172,4 +201,4 @@ cn:alice:
 	e2e.Error(err)
 }
 
-func TestLdapMuxE2E(t *testing.T) { suite.Run(t, new(LdapMuxE2E)) }
+func TestLdapMuxE2E(t *testing.T) { suite.Run(t, new(YamlLdapMuxE2E)) }
