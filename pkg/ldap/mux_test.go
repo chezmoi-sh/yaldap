@@ -33,7 +33,7 @@ func (e2e *YamlLdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
 	err = e2e.server.Router(mux)
 	require.NoError(e2e.T(), err)
 
-	go e2e.server.Run(":63636")
+	go func() { _ = e2e.server.Run(":63636") }()
 	conn, err := ldap.DialURL("ldap://localhost:63636")
 	require.NoError(e2e.T(), err)
 
