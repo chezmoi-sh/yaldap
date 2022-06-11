@@ -13,26 +13,26 @@ import (
 )
 
 type (
-	// Object implements the ldap.Object interface.
-	Object struct {
+	// object implements the ldap.Object interface.
+	object struct {
 		dn         string
 		attributes yaldaplib.Attributes
 
 		bindPasswords []string
 		acls          objectAclList
 
-		children map[string]*Object
+		children map[string]*object
 	}
 )
 
-func (o Object) DN() string                       { return o.dn }
-func (o Object) Attributes() yaldaplib.Attributes { return o.attributes }
-func (o Object) Attribute(name string) (yaldaplib.Attribute, bool) {
+func (o object) DN() string                       { return o.dn }
+func (o object) Attributes() yaldaplib.Attributes { return o.attributes }
+func (o object) Attribute(name string) (yaldaplib.Attribute, bool) {
 	return o.attributes.Attribute(name)
 }
-func (o *Object) Invalid() bool { return o == nil }
+func (o *object) Invalid() bool { return o == nil }
 
-func (o *Object) Search(scope gldap.Scope, filter string) ([]yaldaplib.Object, error) {
+func (o *object) Search(scope gldap.Scope, filter string) ([]yaldaplib.Object, error) {
 	if o == nil {
 		return nil, nil
 	}
@@ -44,7 +44,7 @@ func (o *Object) Search(scope gldap.Scope, filter string) ([]yaldaplib.Object, e
 	return o.search(scope, packet)
 }
 
-func (o *Object) search(scope gldap.Scope, filter *ber.Packet) (objects []yaldaplib.Object, err error) {
+func (o *object) search(scope gldap.Scope, filter *ber.Packet) (objects []yaldaplib.Object, err error) {
 	if match, err := filters.Match(o, filter); err != nil {
 		return nil, err
 	} else if match {
@@ -72,7 +72,7 @@ func (o *Object) search(scope gldap.Scope, filter *ber.Packet) (objects []yaldap
 	return objects, nil
 }
 
-func (o Object) Bind(password string) optional.Option[bool] {
+func (o object) Bind(password string) optional.Option[bool] {
 	if o.bindPasswords == nil {
 		return optional.None[bool]()
 	}
@@ -93,12 +93,12 @@ func (o Object) Bind(password string) optional.Option[bool] {
 	return optional.Some(false)
 }
 
-func (o Object) CanAccessTo(dn string) bool { return o.acls.canAccessTo(dn) }
+func (o object) CanAccessTo(dn string) bool { return o.acls.canAccessTo(dn) }
 
-// Attribute implements the ldap.Attribute interface.
-type Attribute []string
+// attribute implements the ldap.attribute interface.
+type attribute []string
 
-func (a Attribute) Values() []string { return a }
+func (a attribute) Values() []string { return a }
 
 type (
 	// objectAclList contains the list of allowed DN on which the object can perform a search.

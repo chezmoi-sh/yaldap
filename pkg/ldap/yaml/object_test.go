@@ -86,7 +86,7 @@ l1:a:
 }
 
 func TestObject_Nil_Search(t *testing.T) {
-	objs, err := (*Object)(nil).Search(gldap.BaseObject, "")
+	objs, err := (*object)(nil).Search(gldap.BaseObject, "")
 	assert.Empty(t, objs)
 	assert.NoError(t, err)
 }
@@ -94,67 +94,67 @@ func TestObject_Nil_Search(t *testing.T) {
 func TestObject_Bind(t *testing.T) {
 	tests := []struct {
 		name     string
-		object   Object
+		object   object
 		password string
 		expected optional.Option[bool]
 	}{
 		{name: "ValidPassword",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"password"},
-				attributes:    map[string]yaldaplib.Attribute{"password": Attribute{"password"}},
+				attributes:    map[string]yaldaplib.Attribute{"password": attribute{"password"}},
 			},
 			password: "password",
 			expected: optional.Some(true)},
 		{name: "ValidMultiPassword",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"password"},
-				attributes:    map[string]yaldaplib.Attribute{"password": Attribute{"password", "another"}},
+				attributes:    map[string]yaldaplib.Attribute{"password": attribute{"password", "another"}},
 			},
 			password: "another",
 			expected: optional.Some(true)},
 		{name: "ValidMultiPasswordAttribute",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"password", "userPasswd"},
 				attributes: map[string]yaldaplib.Attribute{
-					"password":   Attribute{},
-					"userPasswd": Attribute{"password"},
+					"password":   attribute{},
+					"userPasswd": attribute{"password"},
 				},
 			},
 			password: "password",
 			expected: optional.Some(true)},
 
 		{name: "NoBindProperty",
-			object: Object{
+			object: object{
 				attributes: map[string]yaldaplib.Attribute{
-					"password": Attribute{"password"},
+					"password": attribute{"password"},
 				},
 			},
 			password: "password",
 			expected: optional.None[bool]()},
 		{name: "UnknownPasswordAttribute",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"userPasswd"},
 				attributes: map[string]yaldaplib.Attribute{
-					"password": Attribute{"password"},
+					"password": attribute{"password"},
 				},
 			},
 			password: "password",
 			expected: optional.Some(false), // Authorisation configured but password not found -> wrong credential
 		},
 		{name: "EmptyPasswordAttribute",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"password"},
 				attributes: map[string]yaldaplib.Attribute{
-					"password": Attribute{},
+					"password": attribute{},
 				},
 			},
 			password: "password",
 			expected: optional.Some(false)},
 		{name: "WrongPasswordAttribute",
-			object: Object{
+			object: object{
 				bindPasswords: []string{"password"},
 				attributes: map[string]yaldaplib.Attribute{
-					"password": Attribute{"password"},
+					"password": attribute{"password"},
 				},
 			},
 			password: "not-password",
@@ -172,60 +172,60 @@ func TestObject_Bind(t *testing.T) {
 func TestObject_CanAccessTo(t *testing.T) {
 	tests := []struct {
 		name     string
-		object   Object
+		object   object
 		dn       string
 		expected bool
 	}{
 		{name: "DeniedByDefault",
-			object:   Object{},
+			object:   object{},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "DeniedByDefault2",
-			object:   Object{acls: objectAclList{}},
+			object:   object{acls: objectAclList{}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "AllowedOnDN",
-			object:   Object{acls: objectAclList{{"uid=alice", true}}},
+			object:   object{acls: objectAclList{{"uid=alice", true}}},
 			dn:       "uid=alice",
 			expected: true},
 		{name: "AllowedOnParentDN",
-			object:   Object{acls: objectAclList{{"ou=people", true}}},
+			object:   object{acls: objectAclList{{"ou=people", true}}},
 			dn:       "uid=alice,ou=people",
 			expected: true},
 		{name: "DeniedOnDN",
-			object:   Object{acls: objectAclList{{"uid=alice", false}}},
+			object:   object{acls: objectAclList{{"uid=alice", false}}},
 			dn:       "uid=alice",
 			expected: false},
 		{name: "DeniedOnParentDN",
-			object:   Object{acls: objectAclList{{"ou=people", false}}},
+			object:   object{acls: objectAclList{{"ou=people", false}}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 
 		{name: "AllowedOnParentDNButDeniedOnDN",
-			object:   Object{acls: objectAclList{{"ou=people", true}, {"uid=alice,ou=people", false}}},
+			object:   object{acls: objectAclList{{"ou=people", true}, {"uid=alice,ou=people", false}}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "AllowedOnPParentDNButDeniedOnParentDN",
-			object:   Object{acls: objectAclList{{"dc=org", true}, {"ou=people,dc=org", false}}},
+			object:   object{acls: objectAclList{{"dc=org", true}, {"ou=people,dc=org", false}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 
 		{name: "DeniedOnParentDNButAllowedOnDN",
-			object:   Object{acls: objectAclList{{"ou=people", false}, {"uid=alice,ou=people", true}}},
+			object:   object{acls: objectAclList{{"ou=people", false}, {"uid=alice,ou=people", true}}},
 			dn:       "uid=alice,ou=people",
 			expected: true},
 		{name: "DeniedOnPParentDNButAllowedOnParentDN",
-			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people,dc=org", true}}},
+			object:   object{acls: objectAclList{{"dc=org", false}, {"ou=people,dc=org", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: true},
 
 		{name: "DeniedOnParentWithAllowedFragment",
-			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}}},
+			object:   object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 
 		{name: "DeniedOnParentWithAllowedFragment2",
-			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}, {"uid=bob,ou=people,dc=org", false}, {"a=a,b=b,c=c,d=d,e=e", true}}},
+			object:   object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}, {"uid=bob,ou=people,dc=org", false}, {"a=a,b=b,c=c,d=d,e=e", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 	}
