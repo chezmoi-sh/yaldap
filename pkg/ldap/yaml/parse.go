@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -52,11 +53,8 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*Object
 			case PropertyAllowedDN:
 				fallthrough
 			case PropertyDeniedDN:
-				if object.acl == nil {
-					object.acl = map[string]bool{}
-				}
 				for _, dn := range prop.Values() {
-					object.acl[dn] = key == PropertyAllowedDN
+					object.acls = append(object.acls, objectAclRule{dn, key == PropertyAllowedDN})
 				}
 			default:
 				return nil, ParseError(fmt.Errorf("unkown property %s on %s", strings.TrimPrefix(key, PropertyPrefix), dn))
@@ -85,6 +83,7 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*Object
 
 		object.children[key].attributes[sp[0]] = &Attribute{sp[1]}
 	}
+	sort.Sort(object.acls)
 	return object, nil
 }
 

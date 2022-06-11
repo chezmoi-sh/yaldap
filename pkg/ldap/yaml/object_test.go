@@ -1,6 +1,7 @@
 package yaml
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/jimlambrt/gldap"
@@ -168,7 +169,7 @@ func TestObject_Bind(t *testing.T) {
 	}
 }
 
-func TestObject_CanSearchOn(t *testing.T) {
+func TestObject_CanAccessTo(t *testing.T) {
 	tests := []struct {
 		name     string
 		object   Object
@@ -180,58 +181,60 @@ func TestObject_CanSearchOn(t *testing.T) {
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "DeniedByDefault2",
-			object:   Object{acl: map[string]bool{}},
+			object:   Object{acls: objectAclList{}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "AllowedOnDN",
-			object:   Object{acl: map[string]bool{"uid=alice": true}},
+			object:   Object{acls: objectAclList{{"uid=alice", true}}},
 			dn:       "uid=alice",
 			expected: true},
 		{name: "AllowedOnParentDN",
-			object:   Object{acl: map[string]bool{"ou=people": true}},
+			object:   Object{acls: objectAclList{{"ou=people", true}}},
 			dn:       "uid=alice,ou=people",
 			expected: true},
 		{name: "DeniedOnDN",
-			object:   Object{acl: map[string]bool{"uid=alice": false}},
+			object:   Object{acls: objectAclList{{"uid=alice", false}}},
 			dn:       "uid=alice",
 			expected: false},
 		{name: "DeniedOnParentDN",
-			object:   Object{acl: map[string]bool{"ou=people": false}},
+			object:   Object{acls: objectAclList{{"ou=people", false}}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 
 		{name: "AllowedOnParentDNButDeniedOnDN",
-			object:   Object{acl: map[string]bool{"ou=people": true, "uid=alice,ou=people": false}},
+			object:   Object{acls: objectAclList{{"ou=people", true}, {"uid=alice,ou=people", false}}},
 			dn:       "uid=alice,ou=people",
 			expected: false},
 		{name: "AllowedOnPParentDNButDeniedOnParentDN",
-			object:   Object{acl: map[string]bool{"dc=org": true, "ou=people,dc=org": false}},
+			object:   Object{acls: objectAclList{{"dc=org", true}, {"ou=people,dc=org", false}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 
 		{name: "DeniedOnParentDNButAllowedOnDN",
-			object:   Object{acl: map[string]bool{"ou=people": false, "uid=alice,ou=people": true}},
+			object:   Object{acls: objectAclList{{"ou=people", false}, {"uid=alice,ou=people", true}}},
 			dn:       "uid=alice,ou=people",
 			expected: true},
 		{name: "DeniedOnPParentDNButAllowedOnParentDN",
-			object:   Object{acl: map[string]bool{"dc=org": false, "ou=people,dc=org": true}},
+			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people,dc=org", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: true},
 
 		{name: "DeniedOnParentWithAllowedFragment",
-			object:   Object{acl: map[string]bool{"dc=org": false, "ou=people": true}},
+			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 
 		{name: "DeniedOnParentWithAllowedFragment2",
-			object:   Object{acl: map[string]bool{"dc=org": false, "ou=people": true, "uid=bob,ou=people,dc=org": false, "a=a,b=b,c=c,d=d,e=e": true}},
+			object:   Object{acls: objectAclList{{"dc=org", false}, {"ou=people", true}, {"uid=bob,ou=people,dc=org", false}, {"a=a,b=b,c=c,d=d,e=e", true}}},
 			dn:       "uid=alice,ou=people,dc=org",
 			expected: false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.object.CanSearchOn(tt.dn)
+			sort.Sort(tt.object.acls) // NOTE: use the same sorting mechanism than during parsing
+
+			result := tt.object.CanAccessTo(tt.dn)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

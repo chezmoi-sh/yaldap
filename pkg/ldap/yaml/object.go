@@ -19,13 +19,10 @@ type (
 		attributes yaldaplib.Attributes
 
 		bindPasswords []string
-		acl           objectACL
+		acls          objectAclList
 
 		children map[string]*Object
 	}
-
-	// objectACL contains the list of allowed DN on which the object can perform a search.
-	objectACL map[string]bool
 )
 
 func (o Object) DN() string                       { return o.dn }
@@ -96,33 +93,39 @@ func (o Object) Bind(password string) optional.Option[bool] {
 	return optional.Some(false)
 }
 
-func (o Object) CanSearchOn(dn string) bool {
-	if o.acl == nil {
-		return false
-	}
-
-	allowed, exists := o.acl[dn]
-	if exists {
-		return allowed
-	}
-
-	maxDepth := strings.Count(dn, ",")
-	curDepth, permission := -1, false
-	for name, allowed := range o.acl {
-		depth := strings.Count(name, ",")
-
-		switch {
-		case depth > maxDepth:
-			continue
-		case strings.HasSuffix(dn, name) && depth > curDepth:
-			curDepth = depth
-			permission = allowed
-		}
-	}
-	return permission
-}
+func (o Object) CanAccessTo(dn string) bool { return o.acls.canAccessTo(dn) }
 
 // Attribute implements the ldap.Attribute interface.
 type Attribute []string
 
 func (a Attribute) Values() []string { return a }
+
+type (
+	// objectAclList contains the list of allowed DN on which the object can perform a search.
+	objectAclList []objectAclRule
+	// objectAclRule represent an ACL rule.
+	objectAclRule struct {
+		suffix  string
+		allowed bool
+	}
+)
+
+func (o objectAclList) Len() int { return len(o) }
+func (o objectAclList) Less(i, j int) bool {
+	// NOTE: the most precise suffix is, the higher priority it will have
+	return strings.Count(o[i].suffix, ",") > strings.Count(o[j].suffix, ",")
+}
+func (o objectAclList) Swap(i, j int) { o[i], o[j] = o[j], o[i] }
+
+func (o objectAclList) canAccessTo(dn string) bool {
+	if len(o) == 0 {
+		return false
+	}
+
+	for _, rule := range o {
+		if strings.HasSuffix(dn, rule.suffix) {
+			return rule.allowed
+		}
+	}
+	return false
+}

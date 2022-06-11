@@ -273,7 +273,7 @@ ou:people:
 						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
 						children: map[string]*Object{
 							"uid=alice": __(Object{dn: "uid=alice,ou=people",
-								acl: map[string]bool{"ou=people": true, "ou=subgroup,dc=example,dc=org": true},
+								acls: objectAclList{{"ou=subgroup,dc=example,dc=org", true}, {"ou=people", true}},
 								attributes: map[string]yaldaplib.Attribute{
 									"uid":      &Attribute{"alice"},
 									"password": &Attribute{"alice"},
@@ -297,7 +297,7 @@ ou:people:
 						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
 						children: map[string]*Object{
 							"uid=alice": __(Object{dn: "uid=alice,ou=people",
-								acl: map[string]bool{"ou=people": false, "ou=subgroup,dc=example,dc=org": false},
+								acls: objectAclList{{"ou=subgroup,dc=example,dc=org", false}, {"ou=people", false}},
 								attributes: map[string]yaldaplib.Attribute{
 									"uid":      &Attribute{"alice"},
 									"password": &Attribute{"alice"},
@@ -322,7 +322,7 @@ ou:people:
 						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
 						children: map[string]*Object{
 							"uid=alice": __(Object{dn: "uid=alice,ou=people",
-								acl: map[string]bool{"ou=people": true, "uid=alice,ou=people": false},
+								acls: objectAclList{{"uid=alice,ou=people", false}, {"ou=people", true}},
 								attributes: map[string]yaldaplib.Attribute{
 									"uid":      &Attribute{"alice"},
 									"password": &Attribute{"alice"},
@@ -347,7 +347,6 @@ ou:people:
 						attributes: map[string]yaldaplib.Attribute{"ou": &Attribute{"people"}},
 						children: map[string]*Object{
 							"uid=alice": __(Object{dn: "uid=alice,ou=people",
-								acl: map[string]bool{},
 								attributes: map[string]yaldaplib.Attribute{
 									"uid":      &Attribute{"alice"},
 									"password": &Attribute{"alice"},

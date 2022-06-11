@@ -29,7 +29,7 @@ type (
 		// It returns false if the password is wrong and optional.None if it cannot be authenticated.
 		Bind(password string) optional.Option[bool]
 		// CanSearchOn returns true if the current object is able to perform a search on the given DB.
-		CanSearchOn(dn string) bool
+		CanAccessTo(dn string) bool
 	}
 
 	// Attribute represents an LDAP attribute.
