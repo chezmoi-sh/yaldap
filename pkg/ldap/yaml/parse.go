@@ -13,10 +13,11 @@ const (
 	// attributePrefix prefixes LDAP attributes.
 	attributePrefix = ".@"
 	// propertyPrefix prefixes all internal yaLDAP properties that used internally.
-	propertyPrefix           = ".#"
-	propertyBindPasswordAttr = propertyPrefix + "BindPasswordAttr"
-	propertyAllowedDN        = propertyPrefix + "AllowedDN"
-	propertyDeniedDN         = propertyPrefix + "DeniedDN"
+	propertyPrefix       = ".#"
+	propertyObjectClass  = propertyPrefix + "objectclass"  // .#objectClass
+	propertyBindPassword = propertyPrefix + "bindpassword" // .#bindPassword
+	propertyAllowedDN    = propertyPrefix + "allowdn"      // .#allowDN
+	propertyDeniedDN     = propertyPrefix + "denydn"       // .#denyDN
 )
 
 // ParseError describes a failure occurring during the parsing of the YAML definition.
@@ -31,8 +32,10 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*object
 	index[dn] = object
 
 	for key, obj := range obj {
+		lkey := strings.ToLower(key)
+
 		if strings.HasPrefix(key, attributePrefix) {
-			key = strings.TrimPrefix(key, attributePrefix)
+			key := strings.TrimPrefix(key, attributePrefix)
 			values, err := parseAttributeValue(key, obj)
 			if err != nil {
 				return nil, ParseError(fmt.Errorf("failed to get attribute on %s: %w", dn, err))
@@ -41,20 +44,22 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*object
 			continue
 		}
 
-		if strings.HasPrefix(key, propertyPrefix) {
+		if strings.HasPrefix(lkey, propertyPrefix) {
 			prop, err := parseAttributeValue(key, obj)
 			if err != nil {
 				return nil, ParseError(fmt.Errorf("failed to get property on %s: %w", dn, err))
 			}
 
-			switch key {
-			case propertyBindPasswordAttr:
+			switch lkey {
+			case propertyObjectClass:
+				object.attributes["objectClass"] = attribute(prop.Values())
+			case propertyBindPassword:
 				object.bindPasswords = prop.Values()
 			case propertyAllowedDN:
 				fallthrough
 			case propertyDeniedDN:
 				for _, dn := range prop.Values() {
-					object.acls = append(object.acls, objectAclRule{dn, key == propertyAllowedDN})
+					object.acls = append(object.acls, objectAclRule{dn, lkey == propertyAllowedDN})
 				}
 			default:
 				return nil, ParseError(fmt.Errorf("unkown property %s on %s", strings.TrimPrefix(key, propertyPrefix), dn))
@@ -81,16 +86,16 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*object
 			return nil, err
 		}
 
-		object.children[key].attributes[sp[0]] = &attribute{sp[1]}
+		object.children[key].attributes[sp[0]] = attribute{sp[1]}
 	}
 	sort.Sort(object.acls)
 	return object, nil
 }
 
-func parseAttributeValue(key string, obj interface{}) (*attribute, error) {
+func parseAttributeValue(key string, obj interface{}) (attribute, error) {
 	switch value := obj.(type) {
 	case []string:
-		return (*attribute)(&value), nil
+		return value, nil
 
 	case []interface{}:
 		var values attribute
@@ -107,14 +112,14 @@ func parseAttributeValue(key string, obj interface{}) (*attribute, error) {
 				return nil, ParseError(fmt.Errorf("invalid attribute type '%T' on attribute '%s[%d]'", sval, key, idx))
 			}
 		}
-		return &values, nil
+		return values, nil
 
 	case string:
-		return &attribute{value}, nil
+		return attribute{value}, nil
 	case int:
-		return &attribute{strconv.Itoa(value)}, nil
+		return attribute{strconv.Itoa(value)}, nil
 	case bool:
-		return &attribute{strconv.FormatBool(value)}, nil
+		return attribute{strconv.FormatBool(value)}, nil
 
 	default:
 		return nil, ParseError(fmt.Errorf("invalid attribute type '%T' on attribute '%s'", value, key))

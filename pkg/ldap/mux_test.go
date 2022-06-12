@@ -43,7 +43,7 @@ func (e2e *YamlLdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
 func (e2e *YamlLdapMuxE2E) TestBind() {
 	const yaml = `
 cn:alice:
-  .#BindPasswordAttr: [password]
+  .#bindPassword: [password]
   .@password: alice
 
 cn:bob: {}
@@ -91,9 +91,9 @@ dc:org:
 
     ou:people:
       cn:alice:
-        .#BindPasswordAttr: [userpassword]
-        .#AllowedDN: ["dc=example,dc=org", "cn=alice,ou=people,dc=example,dc=org"]
-        .#DeniedDN: ["dc=org", "ou=people,dc=example,dc=org"]
+        .#bindPassword: [userpassword]
+        .#allowDN: ["dc=example,dc=org", "cn=alice,ou=people,dc=example,dc=org"]
+        .#denyDN: ["dc=org", "ou=people,dc=example,dc=org"]
 
         .@objectclass: [person]
         .@userpassword: alice
@@ -159,7 +159,7 @@ dc:org:
 func (e2e *YamlLdapMuxE2E) TestAdd() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
- .#BindPasswordAttr: [password]
+ .#bindPassword: [password]
  .@userpassword: alice
 `)
 	defer conn.Close()
@@ -174,7 +174,7 @@ cn:alice:
 func (e2e *YamlLdapMuxE2E) TestModify() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
- .#BindPasswordAttr: [password]
+ .#bindPassword: [password]
  .@userpassword: alice
 `)
 	defer conn.Close()
@@ -189,7 +189,7 @@ cn:alice:
 func (e2e *YamlLdapMuxE2E) TestDelete() {
 	conn := e2e.bootstrapLdap(`
 cn:alice:
- .#BindPasswordAttr: [password]
+ .#bindPassword: [password]
  .@userpassword: alice
 `)
 	defer conn.Close()
