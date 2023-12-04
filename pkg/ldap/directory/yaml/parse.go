@@ -1,4 +1,4 @@
-package yaml
+package yamldir
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 const (
@@ -27,7 +27,7 @@ func parseObject(dn string, obj map[string]interface{}, index map[string]*object
 	object := &object{
 		dn:         dn,
 		children:   map[string]*object{},
-		attributes: yaldaplib.Attributes{},
+		attributes: ldap.Attributes{},
 	}
 	index[dn] = object
 

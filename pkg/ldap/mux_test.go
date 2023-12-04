@@ -2,14 +2,15 @@ package ldap_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/go-ldap/ldap/v3"
+	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
-	"github.com/xunleii/yaldap/pkg/ldap/yaml"
+	"github.com/xunleii/yaldap/pkg/ldap"
+	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
 
 type YamlLdapMuxE2E struct {
@@ -25,16 +26,23 @@ func (e2e *YamlLdapMuxE2E) TearDownTest() {
 	_ = e2e.server.Stop()
 }
 
-func (e2e *YamlLdapMuxE2E) bootstrapLdap(raw string) *ldap.Conn {
-	directory, err := yaml.NewDirectory([]byte(raw))
+func (e2e *YamlLdapMuxE2E) bootstrapLdap(raw string) *goldap.Conn {
+	directory, err := yamldir.NewDirectory([]byte(raw))
 	require.NoError(e2e.T(), err)
 
-	mux := yaldaplib.NewMux(directory)
+	mux := ldap.NewMux(directory)
 	err = e2e.server.Router(mux)
 	require.NoError(e2e.T(), err)
 
-	go func() { _ = e2e.server.Run(":63636") }()
-	conn, err := ldap.DialURL("ldap://localhost:63636")
+	go func() {
+		err = e2e.server.Run(":63636")
+		require.NoError(e2e.T(), err)
+	}()
+	for !e2e.server.Ready() {
+		time.Sleep(time.Millisecond)
+	}
+
+	conn, err := goldap.DialURL("ldap://localhost:63636")
 	require.NoError(e2e.T(), err)
 
 	return conn
@@ -57,22 +65,30 @@ cn:bob: {}
 		password string
 		expect   func(assert.TestingT, error, ...interface{}) bool
 	}{
-		{name: "SuccessfulBind",
+		{
+			name:     "SuccessfulBind",
 			dn:       "cn=alice",
 			password: "alice",
-			expect:   assert.NoError},
-		{name: "InvalidDN",
+			expect:   assert.NoError,
+		},
+		{
+			name:     "InvalidDN",
 			dn:       "cn=eve",
 			password: "bob",
-			expect:   assert.Error},
-		{name: "InvalidPassword",
+			expect:   assert.Error,
+		},
+		{
+			name:     "InvalidPassword",
 			dn:       "cn=alice",
 			password: "bob",
-			expect:   assert.Error},
-		{name: "NoPassword",
+			expect:   assert.Error,
+		},
+		{
+			name:     "NoPassword",
 			dn:       "cn=bob",
 			password: "bob",
-			expect:   assert.Error},
+			expect:   assert.Error,
+		},
 	}
 
 	for _, tt := range tests {
@@ -114,32 +130,42 @@ dc:org:
 		filter string
 		result int
 	}{
-		{name: "FindAlice",
+		{
+			name:   "FindAlice",
 			basedn: "dc=org",
-			scope:  ldap.ScopeWholeSubtree,
+			scope:  goldap.ScopeWholeSubtree,
 			filter: "(cn=alice)",
-			result: 1}, // cn=alice,ou=people,dc=example,dc=org
-		{name: "FindAllObjectclass",
+			result: 1,
+		}, // cn=alice,ou=people,dc=example,dc=org
+		{
+			name:   "FindAllObjectclass",
 			basedn: "dc=org",
-			scope:  ldap.ScopeWholeSubtree,
+			scope:  goldap.ScopeWholeSubtree,
 			filter: "(objectclass=*)",
-			result: 2}, // cn=alice,ou=people,dc=example,dc=org & dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & dc=example2,dc=org rejected by ACL)
-		{name: "FindAllOuOrCn",
+			result: 2,
+		}, // cn=alice,ou=people,dc=example,dc=org & dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & dc=example2,dc=org rejected by ACL)
+		{
+			name:   "FindAllOuOrCn",
 			basedn: "dc=org",
-			scope:  ldap.ScopeWholeSubtree,
+			scope:  goldap.ScopeWholeSubtree,
 			filter: "(|(ou=*)(cn=*))",
-			result: 1}, // cn=alice,ou=people,dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & ou=people,dc=example,dc=org rejected by ACL)
+			result: 1,
+		}, // cn=alice,ou=people,dc=example,dc=org (cn=bob,ou=people,dc=example,dc=org & ou=people,dc=example,dc=org rejected by ACL)
 
-		{name: "InvalidDN",
+		{
+			name:   "InvalidDN",
 			basedn: "dc=alice",
-			scope:  ldap.ScopeWholeSubtree,
+			scope:  goldap.ScopeWholeSubtree,
 			filter: "(objectclass=*)",
-			result: 0},
-		{name: "InvalidScope",
+			result: 0,
+		},
+		{
+			name:   "InvalidScope",
 			basedn: "dc=org",
-			scope:  ldap.ScopeSingleLevel,
+			scope:  goldap.ScopeSingleLevel,
 			filter: "(cn=alice)",
-			result: 0},
+			result: 0,
+		},
 	}
 
 	err := conn.Bind("cn=alice,ou=people,dc=example,dc=org", "alice")
@@ -147,7 +173,7 @@ dc:org:
 
 	for _, tt := range tests {
 		e2e.T().Run(tt.name, func(t *testing.T) {
-			req := ldap.NewSearchRequest(tt.basedn, tt.scope, 0, 0, 0, false, tt.filter, nil, nil)
+			req := goldap.NewSearchRequest(tt.basedn, tt.scope, 0, 0, 0, false, tt.filter, nil, nil)
 			res, err := conn.Search(req)
 			require.NoError(t, err)
 
@@ -167,7 +193,7 @@ cn:alice:
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
 
-	err = conn.Add(ldap.NewAddRequest("cn=bob", nil))
+	err = conn.Add(goldap.NewAddRequest("cn=bob", nil))
 	e2e.Error(err)
 }
 
@@ -182,7 +208,7 @@ cn:alice:
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
 
-	err = conn.Modify(ldap.NewModifyRequest("cn=alice", nil))
+	err = conn.Modify(goldap.NewModifyRequest("cn=alice", nil))
 	e2e.Error(err)
 }
 
@@ -197,7 +223,7 @@ cn:alice:
 	err := conn.Bind("cn=alice", "alice")
 	require.NoError(e2e.T(), err)
 
-	err = conn.Del(ldap.NewDelRequest("cn=alice", nil))
+	err = conn.Del(goldap.NewDelRequest("cn=alice", nil))
 	e2e.Error(err)
 }
 

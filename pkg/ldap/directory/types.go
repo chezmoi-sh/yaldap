@@ -1,4 +1,4 @@
-package ldap
+package directory
 
 import (
 	"github.com/jimlambrt/gldap"

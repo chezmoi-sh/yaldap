@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	ber "github.com/go-asn1-ber/asn1-ber"
-	"github.com/go-ldap/ldap/v3"
+	goldap "github.com/go-ldap/ldap/v3"
 	. "github.com/moznion/go-optional"
+
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
@@ -17,16 +18,22 @@ func TestPresentResolver(t *testing.T) {
 	}
 
 	tests := []filterResolverTestCase{
-		{name: "AttrExists",
-			filter: must(ldap.CompileFilter("(memberOf=*)")),
-			result: Some(true)},
-		{name: "AttrDoesntExist",
-			filter: must(ldap.CompileFilter("(uid=*)")),
-			result: Some(false)},
+		{
+			name:   "AttrExists",
+			filter: must(goldap.CompileFilter("(memberOf=*)")),
+			result: Some(true),
+		},
+		{
+			name:   "AttrDoesntExist",
+			filter: must(goldap.CompileFilter("(uid=*)")),
+			result: Some(false),
+		},
 
-		{name: "InvalidExpression",
+		{
+			name:   "InvalidExpression",
 			filter: &ber.Packet{},
-			result: None[bool]()},
+			result: None[bool](),
+		},
 	}
 
 	for _, tt := range tests {

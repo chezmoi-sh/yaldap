@@ -1,9 +1,9 @@
-package yaml
+package yamldir
 
 import (
 	"fmt"
 
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,4 +32,4 @@ func NewDirectory(raw []byte) (*directory, error) {
 	return directory, nil
 }
 
-func (d directory) BaseDN(dn string) yaldaplib.Object { return d.index[dn] }
+func (d directory) BaseDN(dn string) ldap.Object { return d.index[dn] }

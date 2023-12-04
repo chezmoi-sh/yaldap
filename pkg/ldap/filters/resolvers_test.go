@@ -8,7 +8,8 @@ import (
 	. "github.com/moznion/go-optional"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
@@ -20,7 +21,7 @@ type filterResolverTestCase struct {
 
 func must[T any](x T, _ error) T { return x }
 
-func (tc filterResolverTestCase) Run(t *testing.T, object yaldaplib.Object, resolver filters.BerFilterExpressionResolver) {
+func (tc filterResolverTestCase) Run(t *testing.T, object ldap.Object, resolver filters.BerFilterExpressionResolver) {
 	expected, _ := tc.result.Take()
 	result, err := resolver(object, tc.filter)
 
@@ -32,15 +33,16 @@ func (tc filterResolverTestCase) Run(t *testing.T, object yaldaplib.Object, reso
 	}
 }
 
-type mockLdapObject map[string]yaldaplib.Attribute
+type mockLdapObject map[string]ldap.Attribute
 
-func (o mockLdapObject) DN() string                       { return "" }
-func (o mockLdapObject) Attributes() yaldaplib.Attributes { return yaldaplib.Attributes(o) }
-func (o mockLdapObject) Invalid() bool                    { return false }
-func (o mockLdapObject) Attribute(name string) (yaldaplib.Attribute, bool) {
-	return yaldaplib.Attributes(o).Attribute(name)
+func (o mockLdapObject) DN() string                  { return "" }
+func (o mockLdapObject) Attributes() ldap.Attributes { return ldap.Attributes(o) }
+func (o mockLdapObject) Invalid() bool               { return false }
+func (o mockLdapObject) Attribute(name string) (ldap.Attribute, bool) {
+	return ldap.Attributes(o).Attribute(name)
 }
-func (o mockLdapObject) Search(gldap.Scope, string) ([]yaldaplib.Object, error) {
+
+func (o mockLdapObject) Search(gldap.Scope, string) ([]ldap.Object, error) {
 	return nil, nil
 }
 func (o mockLdapObject) Bind(string) Option[bool]   { return Some(true) }

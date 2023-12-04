@@ -1,14 +1,14 @@
-package yaml
+package yamldir
 
 import (
 	"fmt"
 	"strings"
 
 	ber "github.com/go-asn1-ber/asn1-ber"
-	"github.com/go-ldap/ldap/v3"
+	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
 	"github.com/moznion/go-optional"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
@@ -16,7 +16,7 @@ type (
 	// object implements the ldap.Object interface.
 	object struct {
 		dn         string
-		attributes yaldaplib.Attributes
+		attributes ldap.Attributes
 
 		bindPasswords []string
 		acls          objectAclList
@@ -25,26 +25,26 @@ type (
 	}
 )
 
-func (o object) DN() string                       { return o.dn }
-func (o object) Attributes() yaldaplib.Attributes { return o.attributes }
-func (o object) Attribute(name string) (yaldaplib.Attribute, bool) {
+func (o object) DN() string                  { return o.dn }
+func (o object) Attributes() ldap.Attributes { return o.attributes }
+func (o object) Attribute(name string) (ldap.Attribute, bool) {
 	return o.attributes.Attribute(name)
 }
 func (o *object) Invalid() bool { return o == nil }
 
-func (o *object) Search(scope gldap.Scope, filter string) ([]yaldaplib.Object, error) {
+func (o *object) Search(scope gldap.Scope, filter string) ([]ldap.Object, error) {
 	if o == nil {
 		return nil, nil
 	}
 
-	packet, err := ldap.CompileFilter(filter)
+	packet, err := goldap.CompileFilter(filter)
 	if err != nil {
 		return nil, fmt.Errorf("invalid search filter: %w", err)
 	}
 	return o.search(scope, packet)
 }
 
-func (o *object) search(scope gldap.Scope, filter *ber.Packet) (objects []yaldaplib.Object, err error) {
+func (o *object) search(scope gldap.Scope, filter *ber.Packet) (objects []ldap.Object, err error) {
 	if match, err := filters.Match(o, filter); err != nil {
 		return nil, err
 	} else if match {

@@ -1,4 +1,4 @@
-package yaml
+package yamldir
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"gopkg.in/yaml.v3"
 )
 
 func TestParseDirectory(t *testing.T) {
 	__ := func(entry object) *object {
 		if entry.attributes == nil {
-			entry.attributes = yaldaplib.Attributes{}
+			entry.attributes = ldap.Attributes{}
 		}
 		if entry.children == nil {
 			entry.children = map[string]*object{}
@@ -32,7 +32,7 @@ func TestParseDirectory(t *testing.T) {
 			expect: __(object{
 				children: map[string]*object{
 					"uid=alice": __(object{dn: "uid=alice",
-						attributes: yaldaplib.Attributes{"uid": attribute{"alice"}},
+						attributes: ldap.Attributes{"uid": attribute{"alice"}},
 					}),
 				}}),
 		},
@@ -46,7 +46,7 @@ uid:alice:
 			expect: __(object{
 				children: map[string]*object{
 					"uid=alice": __(object{dn: "uid=alice",
-						attributes: yaldaplib.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
+						attributes: ldap.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
 					}),
 				}}),
 		},
@@ -64,10 +64,10 @@ uid:bob:
 			expect: __(object{
 				children: map[string]*object{
 					"uid=alice": __(object{dn: "uid=alice",
-						attributes: yaldaplib.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
+						attributes: ldap.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
 					}),
 					"uid=bob": __(object{dn: "uid=bob",
-						attributes: yaldaplib.Attributes{"uid": attribute{"bob"}, "memberOf": attribute{"user"}, "givenname": attribute{"bob"}},
+						attributes: ldap.Attributes{"uid": attribute{"bob"}, "memberOf": attribute{"user"}, "givenname": attribute{"bob"}},
 					}),
 				}}),
 		},
@@ -84,16 +84,16 @@ dc:org:
 			expect: __(object{
 				children: map[string]*object{
 					"dc=org": __(object{dn: "dc=org",
-						attributes: yaldaplib.Attributes{"dc": attribute{"org"}},
+						attributes: ldap.Attributes{"dc": attribute{"org"}},
 						children: map[string]*object{
 							"cn=example": __(object{dn: "cn=example,dc=org",
-								attributes: yaldaplib.Attributes{"cn": attribute{"example"}},
+								attributes: ldap.Attributes{"cn": attribute{"example"}},
 								children: map[string]*object{
 									"ou=people": __(object{dn: "ou=people,cn=example,dc=org",
-										attributes: yaldaplib.Attributes{"ou": attribute{"people"}},
+										attributes: ldap.Attributes{"ou": attribute{"people"}},
 										children: map[string]*object{
 											"uid=alice": __(object{dn: "uid=alice,ou=people,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
+												attributes: ldap.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
 											}),
 										},
 									}),
@@ -130,33 +130,33 @@ dc:org:
 			expect: __(object{
 				children: map[string]*object{
 					"dc=org": __(object{dn: "dc=org",
-						attributes: yaldaplib.Attributes{"dc": attribute{"org"}},
+						attributes: ldap.Attributes{"dc": attribute{"org"}},
 						children: map[string]*object{
 							"cn=example": __(object{dn: "cn=example,dc=org",
-								attributes: yaldaplib.Attributes{"cn": attribute{"example"}},
+								attributes: ldap.Attributes{"cn": attribute{"example"}},
 								children: map[string]*object{
 									"ou=people": __(object{dn: "ou=people,cn=example,dc=org",
-										attributes: yaldaplib.Attributes{"ou": attribute{"people"}},
+										attributes: ldap.Attributes{"ou": attribute{"people"}},
 										children: map[string]*object{
 											"uid=alice": __(object{dn: "uid=alice,ou=people,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
+												attributes: ldap.Attributes{"uid": attribute{"alice"}, "memberOf": attribute{"admin", "user", "h4ck3r"}, "givenname": attribute{"alice"}},
 											}),
 											"uid=bob": __(object{dn: "uid=bob,ou=people,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"uid": attribute{"bob"}, "memberOf": attribute{"user"}, "givenname": attribute{"bob"}},
+												attributes: ldap.Attributes{"uid": attribute{"bob"}, "memberOf": attribute{"user"}, "givenname": attribute{"bob"}},
 											}),
 										},
 									}),
 									"ou=groups": __(object{dn: "ou=groups,cn=example,dc=org",
-										attributes: yaldaplib.Attributes{"ou": attribute{"groups"}},
+										attributes: ldap.Attributes{"ou": attribute{"groups"}},
 										children: map[string]*object{
 											"cn=admin": __(object{dn: "cn=admin,ou=groups,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"cn": attribute{"admin"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org"}},
+												attributes: ldap.Attributes{"cn": attribute{"admin"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org"}},
 											}),
 											"cn=user": __(object{dn: "cn=user,ou=groups,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"cn": attribute{"user"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org", "uid=bob,ou=people,cn=example,dc=org"}},
+												attributes: ldap.Attributes{"cn": attribute{"user"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org", "uid=bob,ou=people,cn=example,dc=org"}},
 											}),
 											"cn=h4ck3r": __(object{dn: "cn=h4ck3r,ou=groups,cn=example,dc=org",
-												attributes: yaldaplib.Attributes{"cn": attribute{"h4ck3r"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org"}},
+												attributes: ldap.Attributes{"cn": attribute{"h4ck3r"}, "members": attribute{"uid=alice,ou=people,cn=example,dc=org"}},
 											}),
 										},
 									}),
@@ -198,11 +198,11 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
 								bindPasswords: []string{"password"},
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -222,11 +222,11 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
 								bindPasswords: []string{"password", "userPasswd"},
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -246,10 +246,10 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -270,11 +270,11 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
 								acls: objectAclList{{"ou=subgroup,dc=example,dc=org", true}, {"ou=people", true}},
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -294,11 +294,11 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
 								acls: objectAclList{{"ou=subgroup,dc=example,dc=org", false}, {"ou=people", false}},
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -319,11 +319,11 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
 								acls: objectAclList{{"uid=alice,ou=people", false}, {"ou=people", true}},
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -344,10 +344,10 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":      attribute{"alice"},
 									"password": attribute{"alice"},
 								},
@@ -366,10 +366,10 @@ ou:people:
 			expect: __(object{
 				children: map[string]*object{
 					"ou=people": __(object{dn: "ou=people",
-						attributes: map[string]yaldaplib.Attribute{"ou": attribute{"people"}},
+						attributes: map[string]ldap.Attribute{"ou": attribute{"people"}},
 						children: map[string]*object{
 							"uid=alice": __(object{dn: "uid=alice,ou=people",
-								attributes: map[string]yaldaplib.Attribute{
+								attributes: map[string]ldap.Attribute{
 									"uid":         attribute{"alice"},
 									"objectClass": attribute{"posixAccount"},
 								},

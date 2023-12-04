@@ -1,4 +1,4 @@
-package yaml
+package yamldir
 
 import (
 	"sort"
@@ -8,7 +8,7 @@ import (
 	"github.com/moznion/go-optional"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 func TestDirectoryEntry_Search(t *testing.T) {
@@ -101,21 +101,21 @@ func TestObject_Bind(t *testing.T) {
 		{name: "ValidPassword",
 			object: object{
 				bindPasswords: []string{"password"},
-				attributes:    map[string]yaldaplib.Attribute{"password": attribute{"password"}},
+				attributes:    map[string]ldap.Attribute{"password": attribute{"password"}},
 			},
 			password: "password",
 			expected: optional.Some(true)},
 		{name: "ValidMultiPassword",
 			object: object{
 				bindPasswords: []string{"password"},
-				attributes:    map[string]yaldaplib.Attribute{"password": attribute{"password", "another"}},
+				attributes:    map[string]ldap.Attribute{"password": attribute{"password", "another"}},
 			},
 			password: "another",
 			expected: optional.Some(true)},
 		{name: "ValidMultiPasswordAttribute",
 			object: object{
 				bindPasswords: []string{"password", "userPasswd"},
-				attributes: map[string]yaldaplib.Attribute{
+				attributes: map[string]ldap.Attribute{
 					"password":   attribute{},
 					"userPasswd": attribute{"password"},
 				},
@@ -125,7 +125,7 @@ func TestObject_Bind(t *testing.T) {
 
 		{name: "NoBindProperty",
 			object: object{
-				attributes: map[string]yaldaplib.Attribute{
+				attributes: map[string]ldap.Attribute{
 					"password": attribute{"password"},
 				},
 			},
@@ -134,7 +134,7 @@ func TestObject_Bind(t *testing.T) {
 		{name: "UnknownPasswordAttribute",
 			object: object{
 				bindPasswords: []string{"userPasswd"},
-				attributes: map[string]yaldaplib.Attribute{
+				attributes: map[string]ldap.Attribute{
 					"password": attribute{"password"},
 				},
 			},
@@ -144,7 +144,7 @@ func TestObject_Bind(t *testing.T) {
 		{name: "EmptyPasswordAttribute",
 			object: object{
 				bindPasswords: []string{"password"},
-				attributes: map[string]yaldaplib.Attribute{
+				attributes: map[string]ldap.Attribute{
 					"password": attribute{},
 				},
 			},
@@ -153,7 +153,7 @@ func TestObject_Bind(t *testing.T) {
 		{name: "WrongPasswordAttribute",
 			object: object{
 				bindPasswords: []string{"password"},
-				attributes: map[string]yaldaplib.Attribute{
+				attributes: map[string]ldap.Attribute{
 					"password": attribute{"password"},
 				},
 			},

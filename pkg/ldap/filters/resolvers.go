@@ -4,19 +4,20 @@ import (
 	"fmt"
 
 	ber "github.com/go-asn1-ber/asn1-ber"
-	"github.com/go-ldap/ldap/v3"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+	goldap "github.com/go-ldap/ldap/v3"
+
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 func init() {
-	berFilterResolvers[ldap.FilterExtensibleMatch] = func(yaldaplib.Object, *ber.Packet) (bool, error) {
-		return false, fmt.Errorf("`%s` filter not implemented", ldap.FilterMap[ldap.FilterEqualityMatch])
+	berFilterResolvers[goldap.FilterExtensibleMatch] = func(ldap.Object, *ber.Packet) (bool, error) {
+		return false, fmt.Errorf("`%s` filter not implemented", goldap.FilterMap[goldap.FilterEqualityMatch])
 	}
 }
 
 // BerFilterExpressionResolver is a function that apply a specific type of LDAP filter expression on the given
 // directory entry. It returns true if the filter match the current entry, false otherwise.
-type BerFilterExpressionResolver func(object yaldaplib.Object, filter *ber.Packet) (bool, error)
+type BerFilterExpressionResolver func(object ldap.Object, filter *ber.Packet) (bool, error)
 
 var berFilterResolvers = map[ber.Tag]BerFilterExpressionResolver{}
 
@@ -28,7 +29,7 @@ func AddFilterResolvers(tag ber.Tag, resolver BerFilterExpressionResolver) {
 }
 
 // Match uses the given filter to check if the current entry matches it.
-func Match(object yaldaplib.Object, filter *ber.Packet) (bool, error) {
+func Match(object ldap.Object, filter *ber.Packet) (bool, error) {
 	if filter == nil {
 		return false, nil
 	}
@@ -44,13 +45,5 @@ type Error struct {
 
 func (err Error) Unwrap() error { return err.err }
 func (err Error) Error() string {
-	return fmt.Sprintf("invalid `%s` filter: %s", ldap.FilterMap[uint64(err.tag)], err.err)
+	return fmt.Sprintf("invalid `%s` filter: %s", goldap.FilterMap[uint64(err.tag)], err.err)
 }
-
-const (
-	errContainOnlyOneExpression      = "should only contain one expression"
-	errContainOnlyAttrCondExpression = "should only contain the attribute & the condition"
-	errInvalidAttribute              = "invalid attribute: must be a valid non-empty string"
-	errInvalidCondition              = "invalid condition: must be a valid string"
-	errWrongValueType                = "internal error: wrong value type"
-)

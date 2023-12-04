@@ -6,7 +6,8 @@ import (
 
 	ber "github.com/go-asn1-ber/asn1-ber"
 	. "github.com/moznion/go-optional"
-	yaldaplib "github.com/xunleii/yaldap/pkg/ldap"
+
+	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
@@ -23,35 +24,49 @@ var (
 )
 
 func init() {
-	filters.AddFilterResolvers(filterAlwaysTrue, func(yaldaplib.Object, *ber.Packet) (bool, error) { return true, nil })
-	filters.AddFilterResolvers(filterAlwaysFalse, func(yaldaplib.Object, *ber.Packet) (bool, error) { return false, nil })
-	filters.AddFilterResolvers(filterAlwaysError, func(yaldaplib.Object, *ber.Packet) (bool, error) { return false, fmt.Errorf("`AlwaysError` filter") })
+	filters.AddFilterResolvers(filterAlwaysTrue, func(ldap.Object, *ber.Packet) (bool, error) { return true, nil })
+	filters.AddFilterResolvers(filterAlwaysFalse, func(ldap.Object, *ber.Packet) (bool, error) { return false, nil })
+	filters.AddFilterResolvers(filterAlwaysError, func(ldap.Object, *ber.Packet) (bool, error) { return false, fmt.Errorf("`AlwaysError` filter") })
 }
 
 func TestAndResolver(t *testing.T) {
 	tests := []filterResolverTestCase{
-		{name: "OneSucceed",
+		{
+			name:   "OneSucceed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysFalsePacket}},
-			result: Some(false)},
-		{name: "AllSucceed",
+			result: Some(false),
+		},
+		{
+			name:   "AllSucceed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysTruePacket}},
-			result: Some(true)},
-		{name: "AllFailed",
+			result: Some(true),
+		},
+		{
+			name:   "AllFailed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysFalsePacket, filterAlwaysFalsePacket}},
-			result: Some(false)},
+			result: Some(false),
+		},
 
-		{name: "NoSubfilter",
+		{
+			name:   "NoSubfilter",
 			filter: &ber.Packet{},
-			result: Some(false)},
-		{name: "OneErrored",
+			result: Some(false),
+		},
+		{
+			name:   "OneErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysErrorPacket}},
-			result: None[bool]()},
-		{name: "TrueBeforeErrored",
+			result: None[bool](),
+		},
+		{
+			name:   "TrueBeforeErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysErrorPacket}},
-			result: None[bool]()},
-		{name: "FalseBeforeErrored",
+			result: None[bool](),
+		},
+		{
+			name:   "FalseBeforeErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysFalsePacket, filterAlwaysErrorPacket}},
-			result: Some(false)},
+			result: Some(false),
+		},
 	}
 
 	for _, tt := range tests {
@@ -63,28 +78,42 @@ func TestAndResolver(t *testing.T) {
 
 func TestOrResolver(t *testing.T) {
 	tests := []filterResolverTestCase{
-		{name: "OneSucceed",
+		{
+			name:   "OneSucceed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysFalsePacket}},
-			result: Some(true)},
-		{name: "AllSucceed",
+			result: Some(true),
+		},
+		{
+			name:   "AllSucceed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysTruePacket}},
-			result: Some(true)},
-		{name: "AllFailed",
+			result: Some(true),
+		},
+		{
+			name:   "AllFailed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysFalsePacket, filterAlwaysFalsePacket}},
-			result: Some(false)},
+			result: Some(false),
+		},
 
-		{name: "NoSubfilter",
+		{
+			name:   "NoSubfilter",
 			filter: &ber.Packet{},
-			result: Some(false)},
-		{name: "OneErrored",
+			result: Some(false),
+		},
+		{
+			name:   "OneErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysErrorPacket}},
-			result: None[bool]()},
-		{name: "TrueBeforeErrored",
+			result: None[bool](),
+		},
+		{
+			name:   "TrueBeforeErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket, filterAlwaysErrorPacket}},
-			result: Some(true)},
-		{name: "FalseBeforeErrored",
+			result: Some(true),
+		},
+		{
+			name:   "FalseBeforeErrored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysFalsePacket, filterAlwaysErrorPacket}},
-			result: None[bool]()},
+			result: None[bool](),
+		},
 	}
 
 	for _, tt := range tests {
@@ -96,19 +125,27 @@ func TestOrResolver(t *testing.T) {
 
 func TestNotResolver(t *testing.T) {
 	tests := []filterResolverTestCase{
-		{name: "Succeed",
+		{
+			name:   "Succeed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysTruePacket}},
-			result: Some(false)},
-		{name: "Failed",
+			result: Some(false),
+		},
+		{
+			name:   "Failed",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysFalsePacket}},
-			result: Some(true)},
+			result: Some(true),
+		},
 
-		{name: "Errored",
+		{
+			name:   "Errored",
 			filter: &ber.Packet{Children: []*ber.Packet{filterAlwaysErrorPacket}},
-			result: None[bool]()},
-		{name: "InvalidFilter",
+			result: None[bool](),
+		},
+		{
+			name:   "InvalidFilter",
 			filter: &ber.Packet{},
-			result: None[bool]()},
+			result: None[bool](),
+		},
 	}
 
 	for _, tt := range tests {

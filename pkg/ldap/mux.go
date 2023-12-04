@@ -2,17 +2,19 @@ package ldap
 
 import (
 	"github.com/jimlambrt/gldap"
+	"github.com/xunleii/yaldap/internal/ldap/auth"
+	"github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 // server is a ldap server that uses a Directory to accept and perform search.
 type server struct {
-	authn     authnConns
-	directory Directory
+	authn     *auth.AuthnConns
+	directory directory.Directory
 }
 
 // NewMux creates a new LDAP server.
-func NewMux(directory Directory) *gldap.Mux {
-	server := &server{directory: directory}
+func NewMux(directory directory.Directory) *gldap.Mux {
+	server := &server{authn: auth.NewAuthnConns(), directory: directory}
 	mux, _ := gldap.NewMux()
 
 	_ = mux.Bind(server.bind)
@@ -62,7 +64,7 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
-	err = s.authn.addAuthn(req.ConnectionID(), obj)
+	err = s.authn.AddAuthn(req.ConnectionID(), obj)
 	if err != nil {
 		resp.SetResultCode(gldap.ResultLocalError)
 		resp.SetDiagnosticMessage(err.Error())
@@ -81,7 +83,7 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		panic(err)
 	}
 
-	obj := s.authn.getAuthn(req.ConnectionID())
+	obj := s.authn.GetAuthn(req.ConnectionID())
 	if obj == nil {
 		resp.SetResultCode(gldap.ResultAuthorizationDenied)
 		return
