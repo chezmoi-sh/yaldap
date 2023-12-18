@@ -1,6 +1,6 @@
 module github.com/xunleii/yaldap
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/go-asn1-ber/asn1-ber v1.5.5
