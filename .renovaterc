@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>beluga-cloud/renovate-config:default",
+    "github>beluga-cloud/renovate-config:gitmoji",
+    "github>beluga-cloud/renovate-config:asdf(nonOfficeHours)",
+    "github>beluga-cloud/renovate-config:github-actions(nonOfficeHours)"
+  ]
+}
