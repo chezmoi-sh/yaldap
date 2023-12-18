@@ -1,4 +1,4 @@
-skip_output = ["meta"]
+skip_output = ["meta", "skips"]
 
 [pre-commit]
 follow = true
