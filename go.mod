@@ -9,6 +9,7 @@ require (
 	github.com/jimlambrt/gldap v0.1.9
 	github.com/moznion/go-optional v0.11.0
 	github.com/puzpuzpuz/xsync v1.5.2
+	github.com/puzpuzpuz/xsync/v2 v2.5.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	gopkg.in/yaml.v3 v3.0.1
