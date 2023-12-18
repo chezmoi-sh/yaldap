@@ -34,7 +34,7 @@ jobs:
         go-version: ${{ matrix.go }}
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # renovate: tag=v3.0.2
     - run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # renovate: tag=v3.1.0
+    - uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
       env:
         OS: ${{ matrix.os }}
         GO_VERSION: ${{ matrix.go }}
