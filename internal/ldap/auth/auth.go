@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/puzpuzpuz/xsync"
+	xsync "github.com/puzpuzpuz/xsync/v3"
 	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
@@ -36,7 +36,7 @@ const defaultTTL = 5 * time.Minute
 // NewSessions returns a new AuthnConns instance.
 func NewSessions() *Sessions {
 	return &Sessions{
-		reg: xsync.NewIntegerMapOf[int, *Session](),
+		reg: xsync.NewMapOf[int, *Session](),
 	}
 }
 
