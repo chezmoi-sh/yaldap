@@ -2,7 +2,7 @@ name: Synchronize labels
 on:
   push:
     branches: [main]
-    paths: [.github/workflows/github.labeler.yaml, .github/labels.yaml]
+    paths: [.github/workflows/push.repo.labels.yaml, .github/labels.yaml]
 
 jobs:
   sync:
