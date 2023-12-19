@@ -29,7 +29,7 @@ type (
 )
 
 func (suite *LDAPTestSuite) SetupSuite() {
-	directory, err := yamldir.NewDirectory([]byte(`
+	directory, err := yamldir.NewDirectoryFromYAML([]byte(`
 dc:org:
   objectclass: organization
   
