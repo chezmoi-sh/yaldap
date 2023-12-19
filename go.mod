@@ -8,7 +8,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.6
 	github.com/jimlambrt/gldap v0.1.9
 	github.com/moznion/go-optional v0.11.0
-	github.com/puzpuzpuz/xsync v1.5.2
+	github.com/puzpuzpuz/xsync/v3 v3.0.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	gopkg.in/yaml.v3 v3.0.1
@@ -23,7 +23,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
 	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 )
