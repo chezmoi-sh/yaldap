@@ -1,42 +1,96 @@
-- name: kind/bug
-  description: Something isn't working
+---
+# https://seantrane.com/posts/logical-colorful-github-labels-18230/
+# Standard - Standard labels commonly used in most repositories.
+- name: breaking
   color: D73A4A
-- name: kind/dependencies
-  description: Dependencies upgrade
-  color: 2B098D
-- name: kind/documentation
-  description: Improvements or additions to documentation
-  color: 0075CA
-- name: kind/enhancement
-  description: New feature or request
-  color: A2EEEF
-- name: kind/question
-  description: Further information is requested
-  color: D876E3
-
-- name: size/XS
-  color: 008000
-- name: size/S
-  color: 008000
-- name: size/M
-  color: FFFF00
-- name: size/L
-  color: FF0000
-- name: size/XL
-  color: FF0000
-
-- name: duplicate
-  description: This doesn't seem right
-  color: CFD3D7
+  description: A breaking change for existing users.
 - name: good first issue
-  description: Good for newcomers
   color: 7057FF
-- name: help wanted
-  description: Extra attention is needed
-  color: 008672
+  description: Good first issue for people wanting to contribute to the project.
+- name: help
+  color: 0D8A16
+  description: We need some extra helping hands or expertise in order to resolve this.
+
+# Size (~ effort) - Describes the relative effort to complete an issue or pull request.
+- name: "size: XS"
+  color: C2E1A2
+  description: Require no effort to review.
+- name: "size: S"
+  color: E9F4DC
+  description: Require little effort to review.
+- name: "size: M"
+  color: E9F4DC
+  description: Require effort to review
+- name: "size: L"
+  color: F7F2C0
+  description: Require some effort to review
+- name: "size: XL"
+  color: FBC901
+  description: Require a large amount of effort to review.
+- name: "size: XXL"
+  color: D73A4A
+  description: Too big to review.
+
+# Priority - Priority labels, but focused on describing the immediacy of attention required.
+- name: "priority: now"
+  color: D73A4A
+- name: "priority: soon"
+  color: FFB8C5
+- name: "priority: backlog"
+  color: FBC901
+
+# State - Describes the decision state of the issue or pull request.
+- name: "state: approved"
+  description: Indicates a PR has been approved by an approver from all required OWNERS files.
+  color: 91CA55
+- name: "state: blocked"
+  description: Indicates that a PR should not merge.
+  color: D73A4A
+- name: "state: pending"
+  description: Indicates that a PR is pending changes.
+  color: FBC901
+- name: "state: active"
+  description: Indicates that an issue or PR is actively being worked on by a contributor.
+  color: 91CA55
+- name: "state: frozen"
+  description: Indicates that an issue or PR should not be auto-closed due to staleness.
+  color: 5EBEFF
+- name: "state: stale"
+  description: Denotes an issue or PR has remained open with no activity and has become stale.
+  color: E6E6E6
+- name: "state: rotten"
+  description: Denotes an issue or PR that has aged beyond stale and will be auto-closed.
+  color: D4C4F9
+
+# Type - Describes the type of issue or pull request.
+- name: "type: bug"
+  color: D73A4A
+  description: Categorizes issue or PR as related to a bug.
+- name: "type: documentation"
+  color: FEF2C0
+  description: Categorizes issue or PR as related to documentation.
+- name: "type: enhancement"
+  color: 5EBEFF
+  description: Categorizes issue or PR as related to a new feature.
+- name: "type: refactor"
+  color: 91CA55
+  description: Categorizes issue or PR as related to cleaning up code, process, or technical debt.
+- name: "type: dependencies"
+  color: FFB8C5
+  description: Categorizes issue or PR as related to dependency upgrades.
+- name: "type: others"
+  color: E6E6E6
+  description: Categorizes issue or PR as related to cleaning up code, process, or technical debt.
+
+# Action - Special labels to enable or disable some features
+- name: no-stale
+  description: Indicates that an issue or PR is exempted from the stable bot.
+  color: E9F4DC
+
+# Others - Uncategorized labels
+- name: security
+  color: D73A4A
+  description: Marks a security issue that needs to be resolved ASAP.
 - name: invalid
-  description: This doesn't seem right
-  color: E4E669
-- name: wontfix
-  description: This will not be worked on
-  color: FFFFFF
+  color: FEF2C0
+  description: Marks a PR or issue that is missing information.
