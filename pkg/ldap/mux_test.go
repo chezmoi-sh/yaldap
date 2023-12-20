@@ -1,6 +1,8 @@
 package ldap_test
 
 import (
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -29,6 +31,8 @@ type (
 )
 
 func (suite *LDAPTestSuite) SetupSuite() {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
 	directory, err := yamldir.NewDirectoryFromYAML([]byte(`
 dc:org:
   objectclass: organization
@@ -60,7 +64,7 @@ dc:org:
 	suite.Server, err = gldap.NewServer()
 	suite.Require().NoError(err)
 
-	err = suite.Server.Router(ldap.NewMux(directory))
+	err = suite.Server.Router(ldap.NewMux(logger, directory))
 	suite.Require().NoError(err)
 
 	go func() {
