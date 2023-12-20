@@ -1,6 +1,7 @@
 package ldap
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/jimlambrt/gldap"
@@ -121,7 +122,7 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 	}
 	obj := session.Object()
 	log = s.logger.With(
-		slog.String("method", "bind"),
+		slog.String("method", "search"),
 		slog.Group("session",
 			slog.Int("id", req.ConnectionID()),
 			slog.Int("request_id", req.ID),
@@ -137,12 +138,6 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
-	log.Debug(
-		"searching",
-		slog.Int64("scope", int64(msg.Scope)),
-		slog.String("filter", msg.Filter),
-		slog.Any("attributes", msg.Attributes),
-	)
 	entries, err := baseDn.Search(msg.Scope, msg.Filter)
 	if err != nil {
 		log.Error("unable to search", slog.String("error", err.Error()))
@@ -151,6 +146,7 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
+	var count int
 	for _, entry := range entries {
 		if obj.CanSearchOn(entry.DN()) {
 			entry := req.NewSearchResponseEntry(
@@ -158,9 +154,17 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 				gldap.WithAttributes(entry.Attributes()),
 			)
 			_ = w.Write(entry)
+			count++
 		}
 	}
-	log.Info("search successful")
+	log.Info(
+		fmt.Sprintf("found %d entries", count),
+		slog.Group("request",
+			slog.Int64("scope", int64(msg.Scope)),
+			slog.String("filter", msg.Filter),
+			slog.Any("attributes", msg.Attributes),
+		),
+	)
 	resp.SetResultCode(gldap.ResultSuccess)
 }
 
