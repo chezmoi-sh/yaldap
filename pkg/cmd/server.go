@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"os/signal"
+	"syscall"
 
 	"github.com/alecthomas/kong"
 	"github.com/jimlambrt/gldap"
@@ -12,6 +15,7 @@ import (
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
 	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 	"github.com/xunleii/yaldap/pkg/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
@@ -35,6 +39,7 @@ type Server struct {
 	Version bool `name:"version" help:"Print version information and exit"`
 }
 
+// Run starts the yaLDAP server using the configuration passed to the command.
 func (s Server) Run(_ *kong.Context) error {
 	logger := s.Logger()
 
@@ -60,7 +65,18 @@ func (s Server) Run(_ *kong.Context) error {
 		return err
 	}
 
-	return server.Run(s.AddrListen, gldap.WithTLSConfig(tlsConfig))
+	g, ctx := errgroup.WithContext(context.Background())
+	g.Go(func() error {
+		return server.Run(s.AddrListen, gldap.WithTLSConfig(tlsConfig))
+	})
+
+	// Graceful shutdown.
+	ctx, _ = signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
+	<-ctx.Done()
+	if err := server.Stop(); err != nil {
+		return err
+	}
+	return g.Wait()
 }
 
 func (s Server) NewDirectory() (directory.Directory, error) {
