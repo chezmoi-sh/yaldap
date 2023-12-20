@@ -96,6 +96,23 @@ func (suite *HashicorpLoggerWrapperTestSuite) TestLog() {
 	}
 }
 
+func (suite *HashicorpLoggerWrapperTestSuite) Test_LogWithLevelLimitation() {
+	var logger hclog.Logger = &HashicorpLoggerWrapper{
+		Logger: slog.New(slog.NewTextHandler(suite.buffer, &slog.HandlerOptions{Level: slog.LevelWarn})),
+	}
+
+	logger.Log(hclog.Debug, "test", "key", "value")
+	suite.Empty(suite.buffer.String())
+	suite.buffer.Reset()
+
+	logger.Log(hclog.Info, "test", "key", "value")
+	suite.Empty(suite.buffer.String())
+	suite.buffer.Reset()
+
+	logger.Log(hclog.Warn, "test", "key", "value")
+	suite.NotEmpty(suite.buffer.String())
+}
+
 func (suite *HashicorpLoggerWrapperTestSuite) TestX() {
 	var logger hclog.Logger = &HashicorpLoggerWrapper{Logger: suite.logger}
 
