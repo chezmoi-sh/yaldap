@@ -51,7 +51,7 @@ func TestServer_YAML_Simple(t *testing.T) {
 	)
 	defer client.Close()
 
-	err := client.Bind("cn=alice,ou=people,c=global,dc=example,dc=org", "alice")
+	err := client.Bind("cn=alice,ou=people,c=fr,dc=example,dc=org", "alice")
 	require.NoError(t, err)
 }
 
@@ -85,7 +85,7 @@ func TestServer_YAML_WithTLS(t *testing.T) {
 	)
 	defer client.Close()
 
-	err = client.Bind("cn=alice,ou=people,c=global,dc=example,dc=org", "alice")
+	err = client.Bind("cn=alice,ou=people,c=fr,dc=example,dc=org", "alice")
 	require.NoError(t, err)
 }
 
@@ -130,7 +130,7 @@ func TestServer_YAML_WithMutualTLS(t *testing.T) {
 	)
 	defer client.Close()
 
-	err = client.Bind("cn=alice,ou=people,c=global,dc=example,dc=org", "alice")
+	err = client.Bind("cn=alice,ou=people,c=fr,dc=example,dc=org", "alice")
 	require.NoError(t, err)
 }
 

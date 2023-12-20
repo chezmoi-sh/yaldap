@@ -2,6 +2,9 @@ module github.com/xunleii/yaldap
 
 go 1.21
 
+// TODO: remove this once the following issue is resolved: https://github.com/jimlambrt/gldap/pull/58
+replace github.com/jimlambrt/gldap => github.com/xunleii/gldap v0.1.10
+
 require (
 	github.com/alecthomas/kong v0.8.1
 	github.com/go-asn1-ber/asn1-ber v1.5.5
