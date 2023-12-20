@@ -3,21 +3,39 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/madflojo/testcerts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func TestServer_Defaults(t *testing.T) {
+	var actual, expected Server
+	expected.AddrListen = ":389"
+	expected.Base.Log.Format = "json"
+	expected.Base.Log.Level = LogLevel(slog.LevelInfo)
+	expected.Backend.Name = "yaml"
+	expected.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml" //nolint:goconst
+	expected.TLS.Enable = false
+	expected.TLS.MutualTLS = false
+
+	os.Args = []string{"...", "--backend.name", "yaml", "--backend.url", "file://../ldap/directory/yaml/fixtures/basic.yaml"}
+	kong.Parse(&actual)
+	assert.Equal(t, expected, actual)
+}
+
 func TestServer_YAML_Simple(t *testing.T) {
 	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t))}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
-	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml" //nolint:goconst
+	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
 
 	go func() { assert.NoError(t, server.Run(nil)) }()
 
