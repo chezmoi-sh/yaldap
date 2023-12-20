@@ -159,6 +159,10 @@ func (logger HashicorpLoggerWrapper) StandardWriter(*hclog.StandardLoggerOptions
 }
 
 func (logger HashicorpLoggerWrapper) log(level slog.Level, msg string, args ...interface{}) {
+	if !logger.Logger.Enabled(context.Background(), level) {
+		return
+	}
+
 	var pcs [1]uintptr
 	// skip [runtime.Callers, this function, this function's caller]
 	runtime.Callers(3, pcs[:])
