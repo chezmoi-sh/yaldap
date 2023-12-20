@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
@@ -19,7 +21,15 @@ type (
 	}
 )
 
-func NewDirectory(raw []byte) (ldap.Directory, error) {
+func NewDirectory(url string) (ldap.Directory, error) {
+	raw, err := os.ReadFile(strings.TrimPrefix(url, "file://"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to read LDAP YAML file: %w", err)
+	}
+	return NewDirectoryFromYAML(raw)
+}
+
+func NewDirectoryFromYAML(raw []byte) (ldap.Directory, error) {
 	directory := &directory{
 		entries: &common.Object{
 			ImplObject: common.ImplObject{
