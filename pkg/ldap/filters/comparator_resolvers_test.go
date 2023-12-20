@@ -47,6 +47,11 @@ func TestGreaterOrEqualResolver(t *testing.T) {
 			filter:   "(memberOf>=z)",
 			expected: assert.False,
 		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(uidnumber>=-1)",
+			expected: assert.True,
+		},
 	}
 
 	for _, tt := range tests {
@@ -122,6 +127,11 @@ func TestLessOrEqualResolver(t *testing.T) {
 		{
 			filter:   "(memberOf<= )",
 			expected: assert.False,
+		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(uidnumber<=1000)",
+			expected: assert.True,
 		},
 	}
 

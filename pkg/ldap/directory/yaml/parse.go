@@ -11,19 +11,19 @@ import (
 )
 
 // parseLDAPObject parses a YAML mapping node into a LDAP object.
-func parseLDAPObject(parent *common.Object, key string, value *yaml.Node) error {
-	if strings.Count(key, ":") != 1 {
+func parseLDAPObject(parent *common.Object, key, value *yaml.Node) error {
+	if strings.Count(key.Value, ":") != 1 {
 		return &ParseError{
 			err: fmt.Errorf(
 				"invalid key: '%s' must be in the form '<type>:<name>' (e.g. 'ou:users')",
-				key,
+				key.Value,
 			),
 			source: value,
 		}
 	}
 
 	// extract the DN from the key
-	dn := strings.Replace(key, ":", "=", 1)
+	dn := strings.Replace(key.Value, ":", "=", 1)
 	if parent := parent.DN(); parent != "" {
 		dn = dn + "," + parent
 	}
@@ -33,7 +33,7 @@ func parseLDAPObject(parent *common.Object, key string, value *yaml.Node) error 
 			DN:         dn,
 			SubObjects: map[string]*common.Object{},
 			Attributes: ldap.Attributes{
-				strings.SplitN(key, ":", 2)[0]: []string{strings.SplitN(key, ":", 2)[1]},
+				strings.SplitN(key.Value, ":", 2)[0]: []string{strings.SplitN(key.Value, ":", 2)[1]},
 			},
 		},
 	}
@@ -42,40 +42,40 @@ func parseLDAPObject(parent *common.Object, key string, value *yaml.Node) error 
 	seen := map[string]bool{}
 	subnodes := slices.Clone(value.Content)
 	for i := 0; i < len(subnodes); i += 2 {
-		key, value := subnodes[i], subnodes[i+1]
+		skey, svalue := subnodes[i], subnodes[i+1]
 
 		// skip already seen keys (can happen with merge tags)
-		if seen[key.Value] {
+		if seen[skey.Value] {
 			continue
 		}
 
 		// resolve aliases nodes
-		for value.Kind == yaml.AliasNode {
-			value = value.Alias
+		for svalue.Kind == yaml.AliasNode {
+			svalue = svalue.Alias
 		}
 
 		// if the sub-node is a 'merge' node, merge the content of the
 		// referenced node into the current node (priority merge)
-		if key.Kind == yaml.ScalarNode && key.Value == "<<" &&
-			(key.Tag == "" || key.Tag == "!" || key.Tag == "!!merge") {
-			if value.Kind != yaml.MappingNode {
+		if skey.Kind == yaml.ScalarNode && skey.Value == "<<" &&
+			(skey.Tag == "" || skey.Tag == "!" || skey.Tag == "!!merge") {
+			if svalue.Kind != yaml.MappingNode {
 				return &ParseError{
-					err:    fmt.Errorf("only mapping nodes can be merged, got a %s", YamlKindVerbose(value.Kind)),
-					source: key,
+					err:    fmt.Errorf("only mapping nodes can be merged, got a %s", YamlKindVerbose(svalue.Kind)),
+					source: skey,
 				}
 			}
 
-			subnodes = append(subnodes, value.Content...)
+			subnodes = append(subnodes, svalue.Content...)
 			continue
 		}
 
-		switch value.Kind {
+		switch svalue.Kind {
 		case yaml.MappingNode:
-			if err := parseLDAPObject(obj, key.Value, value); err != nil {
+			if err := parseLDAPObject(obj, skey, svalue); err != nil {
 				return err
 			}
 		case yaml.SequenceNode, yaml.ScalarNode:
-			if err := parseLDAPAttribute(obj, key.Value, value); err != nil {
+			if err := parseLDAPAttribute(obj, skey, svalue); err != nil {
 				return err
 			}
 		default:
@@ -83,15 +83,15 @@ func parseLDAPObject(parent *common.Object, key string, value *yaml.Node) error 
 			//       that can reach this point is a document node
 			continue
 		}
-		seen[key.Value] = true
+		seen[skey.Value] = true
 	}
 
-	parent.SubObjects[key] = obj
+	parent.SubObjects[key.Value] = obj
 	return nil
 }
 
 // parseLDAPAttribute parses a YAML sequence or scalar node into a LDAP attribute.
-func parseLDAPAttribute(parent *common.Object, key string, value *yaml.Node) error {
+func parseLDAPAttribute(parent *common.Object, key, value *yaml.Node) error {
 	// ignore all null values
 	if value.Tag == "!!null" {
 		return nil
@@ -114,9 +114,22 @@ func parseLDAPAttribute(parent *common.Object, key string, value *yaml.Node) err
 		return nil
 	}
 
+	for name := range parent.Attributes() {
+		if strings.EqualFold(name, key.Value) && name != key.Value {
+			return &ParseError{
+				err: fmt.Errorf(
+					"invalid attribute: '%s' is already defined (case-insensitive match with '%s')",
+					key.Value,
+					name,
+				),
+				source: key,
+			}
+		}
+	}
+
 	switch value.Kind {
 	case yaml.ScalarNode:
-		parent.AddAttribute(key, value.Value)
+		parent.AddAttribute(key.Value, value.Value)
 	case yaml.SequenceNode:
 		for _, node := range value.Content {
 			err := parseLDAPAttribute(parent, key, node)
