@@ -5,5 +5,11 @@
     "github>beluga-cloud/renovate-config:gitmoji",
     "github>beluga-cloud/renovate-config:asdf(nonOfficeHours)",
     "github>beluga-cloud/renovate-config:github-actions(nonOfficeHours)"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["^golang.org/x/"],
+      "enabled": false
+    }
   ]
 }
