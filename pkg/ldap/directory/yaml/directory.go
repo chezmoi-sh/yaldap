@@ -33,6 +33,7 @@ func NewDirectoryFromYAML(raw []byte) (ldap.Directory, error) {
 	directory := &directory{
 		entries: &common.Object{
 			ImplObject: common.ImplObject{
+				Attributes: ldap.Attributes{"objectClass": {"top", "yaLDAPRootDSE"}},
 				SubObjects: map[string]*common.Object{},
 			},
 		},
@@ -97,6 +98,10 @@ func indexDirectory(obj *common.Object, index map[string]*common.Object) {
 }
 
 func (d directory) BaseDN(dn string) ldap.Object {
+	if dn == "" {
+		return d.entries
+	}
+
 	obj, found := d.index[dn]
 	if !found {
 		return nil
