@@ -3,10 +3,12 @@ package ldap
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jimlambrt/gldap"
 	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
+	"github.com/xunleii/yaldap/pkg/utils"
 	"golang.org/x/exp/slices"
 )
 
@@ -73,14 +75,7 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 		//       in order to avoid any bruteforce attack.
 		return
 	}
-	log = s.logger.With(
-		slog.String("method", "bind"),
-		slog.Group("session",
-			slog.Int("id", req.ConnectionID()),
-			slog.Int("request_id", req.ID),
-			slog.String("bind_dn", msg.UserName),
-		),
-	)
+	log = log.With(slog.String("bind_dn", obj.DN()))
 
 	err = s.sessions.NewSession(req.ConnectionID(), obj)
 	if err != nil {
@@ -114,6 +109,12 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		resp.SetDiagnosticMessage(err.Error())
 		return
 	}
+	log = log.With(slog.Group("request",
+		slog.String("base_dn", msg.BaseDN),
+		slog.String("filter", msg.Filter),
+		slog.String("scope", utils.LDAPScopes[msg.Scope]),
+		slog.Any("attributes", msg.Attributes),
+	))
 
 	session := s.sessions.Session(req.ConnectionID())
 	if session == nil {
@@ -122,15 +123,7 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 	obj := session.Object()
-	log = s.logger.With(
-		slog.String("method", "search"),
-		slog.Group("session",
-			slog.Int("id", req.ConnectionID()),
-			slog.Int("request_id", req.ID),
-			slog.String("bind_dn", obj.DN()),
-		),
-		slog.String("base_dn", msg.BaseDN),
-	)
+	log = log.With(slog.String("bind_dn", obj.DN()))
 
 	baseDn := s.directory.BaseDN(msg.BaseDN)
 	if baseDn == nil {
@@ -150,33 +143,24 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 	var count int
 	for _, entry := range entries {
 		if obj.CanSearchOn(entry.DN()) {
+			resp := req.NewSearchResponseEntry(entry.DN())
 			attrs := entry.Attributes()
-			if len(msg.Attributes) > 0 {
-				filtered := directory.Attributes{}
-				for attr, values := range attrs {
-					if slices.Contains(msg.Attributes, attr) {
-						filtered[attr] = values
-					}
+
+			// Filter attributes if needed
+			for attr, values := range attrs {
+				if len(msg.Attributes) == 0 || slices.ContainsFunc(
+					msg.Attributes,
+					func(s string) bool { return strings.EqualFold(s, attr) },
+				) {
+					resp.AddAttribute(attr, values)
 				}
-				attrs = filtered
 			}
 
-			entry := req.NewSearchResponseEntry(
-				entry.DN(),
-				gldap.WithAttributes(attrs),
-			)
-			_ = w.Write(entry)
+			_ = w.Write(resp)
 			count++
 		}
 	}
-	log.Info(
-		fmt.Sprintf("found %d entries", count),
-		slog.Group("request",
-			slog.Int64("scope", int64(msg.Scope)),
-			slog.String("filter", msg.Filter),
-			slog.Any("attributes", msg.Attributes),
-		),
-	)
+	log.Info(fmt.Sprintf("found %d entries", count))
 	resp.SetResultCode(gldap.ResultSuccess)
 }
 
