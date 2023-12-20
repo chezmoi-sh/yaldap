@@ -2,7 +2,7 @@
 yaLDAP is an easy-to-use LDAP server using YAML file as directory definition.
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/xunleii/yaldap)
-[![Go](https://github.com/xunleii/yaldap/actions/workflows/go.yaml/badge.svg?branch=main)](https://github.com/xunleii/yaldap/actions/workflows/go.yaml)
+[![Go](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml/badge.svg)](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml)
 [![Language grade: Go](https://img.shields.io/lgtm/grade/go/g/xunleii/yaldap.svg?logo=lgtm)](https://lgtm.com/projects/g/xunleii/yaldap/context:go)
 [![codecov](https://codecov.io/gh/xunleii/yaldap/branch/main/graph/badge.svg?token=20J4XPYH1H)](https://codecov.io/gh/xunleii/yaldap)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xunleii/yaldap)](https://goreportcard.com/report/github.com/xunleii/yaldap)
