@@ -8,7 +8,14 @@ import (
 	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
 )
 
-func TestNewDirectory_ValidYAML(t *testing.T) {
+func TestNewDirectory_NoFile(t *testing.T) {
+	directory, err := NewDirectory("fixtures/does-not-exist.yaml")
+
+	assert.EqualError(t, err, "unable to read LDAP YAML file: open fixtures/does-not-exist.yaml: no such file or directory")
+	assert.Nil(t, directory)
+}
+
+func TestNewDirectoryFromYAML_ValidYAML(t *testing.T) {
 	raw := []byte(`
 ou:people:
   uid:alice:
@@ -75,7 +82,7 @@ ou:people:
 		},
 	}
 
-	directory, err := NewDirectory(raw)
+	directory, err := NewDirectoryFromYAML(raw)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, directory)

@@ -1,7 +1,6 @@
 package yamldir_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,10 +10,7 @@ import (
 )
 
 func TestFixture_Basic(t *testing.T) {
-	data, err := os.ReadFile("fixtures/basic.yaml")
-	require.NoError(t, err)
-
-	directory, err := yamldir.NewDirectory(data)
+	directory, err := yamldir.NewDirectory("fixtures/basic.yaml")
 	require.NoError(t, err)
 
 	t.Run("dc=org", func(t *testing.T) {
