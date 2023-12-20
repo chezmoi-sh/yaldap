@@ -35,10 +35,10 @@ func (suite *LDAPTestSuite) SetupSuite() {
 
 	directory, err := yamldir.NewDirectoryFromYAML([]byte(`
 dc:org:
-  objectclass: organization
+  objectClass: organization
   
   dc:example:
-    objectclass: organization
+    objectClass: organization
   
     ou:people:
       cn:alice:
@@ -46,18 +46,18 @@ dc:org:
           - !!ldap/acl:allow-on dc=example,dc=org
           - !!ldap/acl:deny-on cn=bob,ou=people,dc=example,dc=org
   
-        objectclass: person
+        objectClass: person
         userpassword: !!ldap/bind:password alice
   
       cn:bob:
-        objectclass: person
+        objectClass: person
         userpassword: !!ldap/bind:password ""
 
       cn:charlie:
-        objectclass: person
+        objectClass: person
   
   dc:example2:
-    objectclass: organization
+    objectClass: organization
 `))
 	suite.Require().NoError(err)
 
@@ -166,7 +166,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -176,7 +176,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 	})
 
 	suite.T().Run("FindAllObjectclass", func(t *testing.T) {
-		req := goldap.NewSearchRequest("dc=org", goldap.ScopeWholeSubtree, 0, 0, 0, false, "(objectclass=*)", nil, nil)
+		req := goldap.NewSearchRequest("dc=org", goldap.ScopeWholeSubtree, 0, 0, 0, false, "(objectClass=*)", nil, nil)
 		res, err := conn.Search(req)
 		require.NoError(t, err)
 
@@ -186,14 +186,14 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "dc=example,dc=org",
 					Attributes: map[string][]string{
 						"dc":          {"example"},
-						"objectclass": {"organization"},
+						"objectClass": {"organization"},
 					},
 				},
 				{
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -201,7 +201,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=charlie,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":          {"charlie"},
-						"objectclass": {"person"},
+						"objectClass": {"person"},
 					},
 				},
 			},
@@ -226,7 +226,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -234,7 +234,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=charlie,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":          {"charlie"},
-						"objectclass": {"person"},
+						"objectClass": {"person"},
 					},
 				},
 			},

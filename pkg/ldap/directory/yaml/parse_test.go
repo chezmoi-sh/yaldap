@@ -127,12 +127,12 @@ func TestParseLDAPObject_WithMergeField(t *testing.T) {
 	raw := `
 ou:people:
   uid:alice: &alice
-    objectclass: [posixAccount]
+    objectClass: [posixAccount]
     memberOf: [admin, user, h4ck3r]
     givenname: alice
   uid:bob:
     <<: *alice
-    objectclass: [UserMail]
+    objectClass: [UserMail]
     givenname: bob
 `
 	expect := map[string]*common.Object{
@@ -146,7 +146,7 @@ ou:people:
 							DN: "uid=alice,ou=people,go=test",
 							Attributes: ldap.Attributes{
 								"uid":         []string{"alice"},
-								"objectclass": []string{"posixAccount"},
+								"objectClass": []string{"posixAccount"},
 								"memberOf":    []string{"admin", "user", "h4ck3r"},
 								"givenname":   []string{"alice"},
 							},
@@ -158,7 +158,7 @@ ou:people:
 							DN: "uid=bob,ou=people,go=test",
 							Attributes: ldap.Attributes{
 								"uid":         []string{"bob"},
-								"objectclass": []string{"UserMail"},
+								"objectClass": []string{"UserMail"},
 								"memberOf":    []string{"admin", "user", "h4ck3r"},
 								"givenname":   []string{"bob"},
 							},
