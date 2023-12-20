@@ -3,6 +3,7 @@ package filters
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
@@ -76,8 +77,11 @@ func compareResolver(fnc compareFnc, object ldap.Object, filter *ber.Packet) (bo
 		return false, fmt.Errorf("invalid condition: must be a valid string")
 	}
 
-	if attr, exists := object.Attributes()[attr]; exists {
-		return fnc(condition, attr), nil
+	for key, values := range object.Attributes() {
+		// NOTE: we need to compare the attribute name in a case-insensitive way.
+		if strings.EqualFold(key, attr) {
+			return fnc(condition, values), nil
+		}
 	}
 	return false, nil
 }

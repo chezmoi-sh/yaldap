@@ -70,9 +70,9 @@ func NewDirectoryFromYAML(raw []byte) (ldap.Directory, error) {
 
 			switch value.Kind {
 			case yaml.MappingNode:
-				err = parseLDAPObject(directory.entries, key.Value, value)
+				err = parseLDAPObject(directory.entries, key, value)
 			case yaml.SequenceNode, yaml.ScalarNode:
-				err = parseLDAPAttribute(directory.entries, key.Value, value)
+				err = parseLDAPAttribute(directory.entries, key, value)
 			}
 
 			if err != nil {
