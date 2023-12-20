@@ -55,7 +55,7 @@ func (s Server) Run(_ *kong.Context) error {
 		return err
 	}
 
-	err = server.Router(ldap.NewMux(directory))
+	err = server.Router(ldap.NewMux(logger, directory))
 	if err != nil {
 		return err
 	}
