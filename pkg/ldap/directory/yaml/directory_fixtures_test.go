@@ -52,7 +52,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"owner"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1000"},
 				"description": {"Organization owners"},
 				"memberUid":   {"alice"},
@@ -67,7 +67,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"dev"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1001"},
 				"description": {"Organization developers"},
 				"memberUid":   {"bob", "charlie"},
@@ -82,7 +82,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"qa"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1002"},
 				"memberUid":   {"charlie", "eve"},
 			},
@@ -96,7 +96,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"ok"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1003"},
 				"description": {"Dummy group"},
 				"memberUid":   {"alice"},
@@ -133,7 +133,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"alice"},
-				"objectclass":   {"posixAccount", "UserMail"},
+				"objectClass":   {"posixAccount", "UserMail"},
 				"description":   {"Main organization admin"},
 				"uid":           {"alice"},
 				"uidNumber":     {"1000"},
@@ -155,7 +155,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"bob"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"bob"},
 				"homeDirectory": {"/home/bob"},
 				"uidNumber":     {"1001"},
@@ -197,7 +197,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"charlie"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"charlie"},
 				"homeDirectory": {"/home/charlie"},
 				"uidNumber":     {"1100"},
@@ -242,7 +242,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"eve"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"eve"},
 				"homeDirectory": {"/home/eve"},
 				"uidNumber":     {"1003"},
