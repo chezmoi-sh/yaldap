@@ -1,6 +1,8 @@
 package ldap
 
 import (
+	"log/slog"
+
 	"github.com/jimlambrt/gldap"
 	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
@@ -10,11 +12,17 @@ import (
 type server struct {
 	sessions  *auth.Sessions
 	directory directory.Directory
+
+	logger *slog.Logger
 }
 
 // NewMux creates a new LDAP server.
-func NewMux(directory directory.Directory) *gldap.Mux {
-	server := &server{sessions: auth.NewSessions(), directory: directory}
+func NewMux(logger *slog.Logger, directory directory.Directory) *gldap.Mux {
+	server := &server{
+		logger:    logger,
+		sessions:  auth.NewSessions(),
+		directory: directory,
+	}
 	mux, _ := gldap.NewMux()
 
 	_ = mux.Bind(server.bind)
@@ -28,11 +36,20 @@ func NewMux(directory directory.Directory) *gldap.Mux {
 
 // bind implements the LDAP bind mechanism to authenticate someone to perform a search.
 func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "bind"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+
 	resp := req.NewBindResponse()
 	defer func() { _ = w.Write(resp) }()
 
 	msg, err := req.GetSimpleBindMessage()
 	if err != nil {
+		log.Error("unable to get simple bind message", slog.String("error", err.Error()))
 		resp.SetResultCode(gldap.ResultLocalError)
 		resp.SetDiagnosticMessage(err.Error())
 		return
@@ -40,6 +57,7 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	obj := s.directory.BaseDN(msg.UserName)
 	if obj == nil {
+		log.Error("unable to find username", slog.String("username", msg.UserName))
 		resp.SetResultCode(gldap.ResultInvalidCredentials)
 		// NOTE: we don't want to give any information about the user existence
 		//       in order to avoid any bruteforce attack.
@@ -47,28 +65,49 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 	}
 
 	if !obj.Bind(string(msg.Password)) {
+		log.Error("unable to bind user", slog.String("username", msg.UserName))
 		resp.SetResultCode(gldap.ResultInvalidCredentials)
 		// NOTE: we don't want to give any information about the user existence
 		//       in order to avoid any bruteforce attack.
 		return
 	}
+	log = s.logger.With(
+		slog.String("method", "bind"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+			slog.String("bind_dn", msg.UserName),
+		),
+	)
 
 	err = s.sessions.NewSession(req.ConnectionID(), obj)
 	if err != nil {
+		log.Error("unable to create session", slog.String("error", err.Error()))
 		resp.SetResultCode(gldap.ResultLocalError)
 		resp.SetDiagnosticMessage(err.Error())
 		return
 	}
+
+	log.Info("bind successful")
 	resp.SetResultCode(gldap.ResultSuccess)
 }
 
 // Search implements the LDAP search mechanism.
 func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "search"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+
 	resp := req.NewSearchDoneResponse(gldap.WithResponseCode(gldap.ResultNoSuchObject))
 	defer func() { _ = w.Write(resp) }()
 
 	msg, err := req.GetSearchMessage()
 	if err != nil {
+		log.Error("unable to get search message", slog.String("error", err.Error()))
 		resp.SetResultCode(gldap.ResultParamError)
 		resp.SetDiagnosticMessage(err.Error())
 		return
@@ -76,19 +115,37 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	session := s.sessions.Session(req.ConnectionID())
 	if session == nil {
+		log.Error("no session found")
 		resp.SetResultCode(gldap.ResultAuthorizationDenied)
 		return
 	}
 	obj := session.Object()
+	log = s.logger.With(
+		slog.String("method", "bind"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+			slog.String("bind_dn", obj.DN()),
+		),
+		slog.String("base_dn", msg.BaseDN),
+	)
 
 	baseDn := s.directory.BaseDN(msg.BaseDN)
 	if baseDn == nil {
+		log.Error("unable to find base DN")
 		resp.SetResultCode(gldap.ResultNoSuchObject)
 		return
 	}
 
+	log.Debug(
+		"searching",
+		slog.Int64("scope", int64(msg.Scope)),
+		slog.String("filter", msg.Filter),
+		slog.Any("attributes", msg.Attributes),
+	)
 	entries, err := baseDn.Search(msg.Scope, msg.Filter)
 	if err != nil {
+		log.Error("unable to search", slog.String("error", err.Error()))
 		resp.SetResultCode(gldap.ResultOperationsError)
 		resp.SetDiagnosticMessage(err.Error())
 		return
@@ -103,11 +160,21 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 			_ = w.Write(entry)
 		}
 	}
+	log.Info("search successful")
 	resp.SetResultCode(gldap.ResultSuccess)
 }
 
 // add implements the LDAP add mechanism.
 func (s *server) add(w *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "add"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+	log.Warn("operation is not supported")
+
 	resp := req.NewResponse(
 		gldap.WithApplicationCode(gldap.ApplicationAddResponse),
 		gldap.WithResponseCode(gldap.ResultUnwillingToPerform),
@@ -118,6 +185,15 @@ func (s *server) add(w *gldap.ResponseWriter, req *gldap.Request) {
 
 // modify implements the LDAP modify mechanism.
 func (s *server) modify(w *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "modify"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+	log.Warn("operation is not supported")
+
 	resp := req.NewResponse(
 		gldap.WithApplicationCode(gldap.ApplicationModifyResponse),
 		gldap.WithResponseCode(gldap.ResultUnwillingToPerform),
@@ -128,6 +204,15 @@ func (s *server) modify(w *gldap.ResponseWriter, req *gldap.Request) {
 
 // del implements the LDAP delete mechanism.
 func (s *server) del(w *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "del"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+	log.Warn("operation is not supported")
+
 	resp := req.NewResponse(
 		gldap.WithApplicationCode(gldap.ApplicationDelResponse),
 		gldap.WithResponseCode(gldap.ResultUnwillingToPerform),
