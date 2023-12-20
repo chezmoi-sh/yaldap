@@ -7,6 +7,7 @@ import (
 	"github.com/jimlambrt/gldap"
 	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
+	"golang.org/x/exp/slices"
 )
 
 // server is a ldap server that uses a Directory to accept and perform search.
@@ -149,9 +150,20 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 	var count int
 	for _, entry := range entries {
 		if obj.CanSearchOn(entry.DN()) {
+			attrs := entry.Attributes()
+			if len(msg.Attributes) > 0 {
+				filtered := directory.Attributes{}
+				for attr, values := range attrs {
+					if slices.Contains(msg.Attributes, attr) {
+						filtered[attr] = values
+					}
+				}
+				attrs = filtered
+			}
+
 			entry := req.NewSearchResponseEntry(
 				entry.DN(),
-				gldap.WithAttributes(entry.Attributes()),
+				gldap.WithAttributes(attrs),
 			)
 			_ = w.Write(entry)
 			count++
