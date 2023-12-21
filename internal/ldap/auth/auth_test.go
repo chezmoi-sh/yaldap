@@ -21,7 +21,7 @@ func (o mockLDAPObject) Bind(string) bool                                  { ret
 func (o mockLDAPObject) CanSearchOn(string) bool                           { return true }
 
 func TestSessions_NewSession(t *testing.T) {
-	sessions := NewSessions(context.Background(), time.Millisecond)
+	sessions := NewSessions(context.Background(), time.Second)
 
 	t.Run("AddSession", func(t *testing.T) {
 		obj := &mockLDAPObject{}
@@ -65,7 +65,7 @@ func TestSessions_NewSession_race(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sessions := NewSessions(context.Background(), time.Millisecond)
+			sessions := NewSessions(context.Background(), time.Second)
 
 			wg := sync.WaitGroup{}
 			for i, objs := range tt.objs {
@@ -87,7 +87,7 @@ func TestSessions_NewSession_race(t *testing.T) {
 }
 
 func TestSessions_Delete(t *testing.T) {
-	sessions := NewSessions(context.Background(), time.Millisecond)
+	sessions := NewSessions(context.Background(), time.Second)
 	_ = sessions.NewSession(0, &mockLDAPObject{})
 
 	t.Run("DeleteExistingSession", func(t *testing.T) {
@@ -183,7 +183,7 @@ func TestSession_Session(t *testing.T) {
 }
 
 func TestSessions_Session_race(t *testing.T) {
-	sessions := NewSessions(context.Background(), time.Millisecond)
+	sessions := NewSessions(context.Background(), time.Second)
 	for i := 0; i < 5; i++ {
 		_ = sessions.NewSession(i, &mockLDAPObject{})
 	}
