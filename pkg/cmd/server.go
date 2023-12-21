@@ -23,7 +23,7 @@ import (
 type Server struct {
 	Base `embed:""`
 
-	AddrListen string `name:"addr-listen" help:"Address to listen on" default:":389"`
+	ListenAddr string `name:"listen-address" help:"Address to listen on" default:":389"`
 
 	Backend struct {
 		Name string `name:"name" help:"Backend which stores the data" enum:"yaml" required:"" placeholder:"BACKEND"`
@@ -72,7 +72,7 @@ func (s Server) Run(_ *kong.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		return server.Run(s.AddrListen, gldap.WithTLSConfig(tlsConfig))
+		return server.Run(s.ListenAddr, gldap.WithTLSConfig(tlsConfig))
 	})
 
 	// Graceful shutdown.
