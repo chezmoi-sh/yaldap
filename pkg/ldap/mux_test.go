@@ -135,6 +135,27 @@ func (suite *LDAPTestSuite) TestMux_Bind() {
 	})
 }
 
+func (suite *LDAPTestSuite) TestMux_Unbind() {
+	conn, err := suite.DialLDAP()
+	suite.Require().NoError(err)
+	defer conn.Close()
+
+	suite.T().Run("SuccessfulUnbind", func(t *testing.T) {
+		err = conn.Bind("cn=alice,ou=people,dc=example,dc=org", "alice")
+		suite.Require().NoError(err)
+
+		err = conn.Unbind() // gldap.Server automatically closes the connection after unbind
+		assert.NoError(t, err)
+
+		_, err = conn.Search(&goldap.SearchRequest{
+			BaseDN: "dc=org",
+			Scope:  goldap.ScopeWholeSubtree,
+			Filter: "(cn=alice)",
+		})
+		assert.EqualError(t, err, "LDAP Result Code 200 \"Network Error\": ldap: connection closed")
+	})
+}
+
 func (suite *LDAPTestSuite) TestMux_Search() {
 	conn, err := suite.DialLDAP()
 	suite.Require().NoError(err)
