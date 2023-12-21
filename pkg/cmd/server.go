@@ -38,7 +38,6 @@ type Server struct {
 		KeyFile   string `name:"tls.key" help:"Path to the key file" optional:"" type:"filecontent" placeholder:"PATH"`
 	} `embed:""`
 
-	Version    bool          `name:"version" help:"Print version information and exit"`
 	SessionTTL time.Duration `name:"session-ttl" help:"Duration of a BIND session before it expires" default:"168h"`
 }
 
