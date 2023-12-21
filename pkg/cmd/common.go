@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/xunleii/yaldap/pkg/utils"
 )
 
 type (
@@ -47,6 +48,8 @@ func (l *LogLevel) Decode(ctx *kong.DecodeContext) error {
 	}
 
 	switch level {
+	case "trace":
+		*l = LogLevel(utils.LevelTrace)
 	case "debug":
 		*l = LogLevel(slog.LevelDebug)
 	case "info":
@@ -56,7 +59,7 @@ func (l *LogLevel) Decode(ctx *kong.DecodeContext) error {
 	case "error":
 		*l = LogLevel(slog.LevelError)
 	default:
-		return fmt.Errorf("invalid level '%s': only debug, info, warn and error are allowed", level)
+		return fmt.Errorf("invalid level '%s': only trace, debug, info, warn and error are allowed", level)
 	}
 	return nil
 }

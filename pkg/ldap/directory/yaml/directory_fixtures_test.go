@@ -18,7 +18,8 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"dc": {"org"},
+				"dc":          {"org"},
+				"objectClass": {"top", "domain"},
 			},
 			obj.Attributes(),
 		)
@@ -29,7 +30,8 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"dc": {"example"},
+				"dc":          {"example"},
+				"objectClass": {"domain"},
 			},
 			obj.Attributes(),
 		)
@@ -40,7 +42,8 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"ou": {"group"},
+				"ou":          {"group"},
+				"objectClass": {"top"},
 			},
 			obj.Attributes(),
 		)
@@ -52,7 +55,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"owner"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1000"},
 				"description": {"Organization owners"},
 				"memberUid":   {"alice"},
@@ -67,7 +70,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"dev"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1001"},
 				"description": {"Organization developers"},
 				"memberUid":   {"bob", "charlie"},
@@ -82,7 +85,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"qa"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1002"},
 				"memberUid":   {"charlie", "eve"},
 			},
@@ -96,7 +99,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":          {"ok"},
-				"objectclass": {"posixGroup"},
+				"objectClass": {"posixGroup"},
 				"gidNumber":   {"1003"},
 				"description": {"Dummy group"},
 				"memberUid":   {"alice"},
@@ -106,34 +109,36 @@ func TestFixture_Basic(t *testing.T) {
 	})
 
 	t.Run("cn=admin,ou=group,dc=example,dc=org", func(t *testing.T) {
-		obj := directory.BaseDN("c=global,dc=example,dc=org")
+		obj := directory.BaseDN("c=fr,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"c": {"global"},
+				"c":           {"fr"},
+				"objectClass": {"top", "country"},
 			},
 			obj.Attributes(),
 		)
 	})
 
-	t.Run("ou=people,c=global,dc=example,dc=org", func(t *testing.T) {
-		obj := directory.BaseDN("ou=people,c=global,dc=example,dc=org")
+	t.Run("ou=people,c=fr,dc=example,dc=org", func(t *testing.T) {
+		obj := directory.BaseDN("ou=people,c=fr,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"ou": {"people"},
+				"ou":          {"people"},
+				"objectClass": {"top"},
 			},
 			obj.Attributes(),
 		)
 	})
 
-	t.Run("cn=alice,ou=people,c=global,dc=example,dc=org", func(t *testing.T) {
-		obj := directory.BaseDN("cn=alice,ou=people,c=global,dc=example,dc=org")
+	t.Run("cn=alice,ou=people,c=fr,dc=example,dc=org", func(t *testing.T) {
+		obj := directory.BaseDN("cn=alice,ou=people,c=fr,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"alice"},
-				"objectclass":   {"posixAccount", "UserMail"},
+				"objectClass":   {"posixAccount"},
 				"description":   {"Main organization admin"},
 				"uid":           {"alice"},
 				"uidNumber":     {"1000"},
@@ -149,13 +154,13 @@ func TestFixture_Basic(t *testing.T) {
 		assert.True(t, obj.CanSearchOn("dc=org"))
 	})
 
-	t.Run("cn=bob,ou=people,c=global,dc=example,dc=org", func(t *testing.T) {
-		obj := directory.BaseDN("cn=bob,ou=people,c=global,dc=example,dc=org")
+	t.Run("cn=bob,ou=people,c=fr,dc=example,dc=org", func(t *testing.T) {
+		obj := directory.BaseDN("cn=bob,ou=people,c=fr,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"bob"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"bob"},
 				"homeDirectory": {"/home/bob"},
 				"uidNumber":     {"1001"},
@@ -169,12 +174,13 @@ func TestFixture_Basic(t *testing.T) {
 		assert.True(t, obj.CanSearchOn("ou=group,dc=example,dc=org"))
 	})
 
-	t.Run("cn=charlie,ou=people,c=global,dc=example,dc=org", func(t *testing.T) {
+	t.Run("cn=charlie,ou=people,c=fr,dc=example,dc=org", func(t *testing.T) {
 		obj := directory.BaseDN("c=fr,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"c": {"fr"},
+				"c":           {"fr"},
+				"objectClass": {"top", "country"},
 			},
 			obj.Attributes(),
 		)
@@ -185,19 +191,20 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"ou": {"people"},
+				"ou":          {"people"},
+				"objectClass": {"top"},
 			},
 			obj.Attributes(),
 		)
 	})
 
-	t.Run("cn=charlie,ou=people,c=fr,dc=example,dc=org", func(t *testing.T) {
-		obj := directory.BaseDN("cn=charlie,ou=people,c=fr,dc=example,dc=org")
+	t.Run("cn=charlie,ou=people,c=de,dc=example,dc=org", func(t *testing.T) {
+		obj := directory.BaseDN("cn=charlie,ou=people,c=de,dc=example,dc=org")
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"charlie"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"charlie"},
 				"homeDirectory": {"/home/charlie"},
 				"uidNumber":     {"1100"},
@@ -209,9 +216,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.True(t, obj.Bind("charlie"))
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("ou=group,dc=example,dc=org"))
-		x := obj.CanSearchOn("cn=admin,ou=group,dc=example,dc=org")
-		_ = x
-		assert.False(t, obj.CanSearchOn("cn=admin,ou=group,dc=example,dc=org"))
+		assert.False(t, obj.CanSearchOn("cn=owner,ou=group,dc=example,dc=org"))
 	})
 
 	t.Run("c=uk,dc=example,dc=org", func(t *testing.T) {
@@ -219,7 +224,8 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"c": {"uk"},
+				"c":           {"uk"},
+				"objectClass": {"top", "country"},
 			},
 			obj.Attributes(),
 		)
@@ -230,7 +236,8 @@ func TestFixture_Basic(t *testing.T) {
 		require.NotNil(t, obj)
 		assert.Equal(t,
 			ldap.Attributes{
-				"ou": {"people"},
+				"ou":          {"people"},
+				"objectClass": {"top"},
 			},
 			obj.Attributes(),
 		)
@@ -242,7 +249,7 @@ func TestFixture_Basic(t *testing.T) {
 		assert.Equal(t,
 			ldap.Attributes{
 				"cn":            {"eve"},
-				"objectclass":   {"posixAccount"},
+				"objectClass":   {"posixAccount"},
 				"uid":           {"eve"},
 				"homeDirectory": {"/home/eve"},
 				"uidNumber":     {"1003"},

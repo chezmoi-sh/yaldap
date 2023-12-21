@@ -1,23 +1,29 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/jimlambrt/gldap"
+	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
 	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 	"github.com/xunleii/yaldap/pkg/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {
 	Base `embed:""`
 
-	AddrListen string `name:"addr-listen" help:"Address to listen on" default:":389"`
+	ListenAddr string `name:"listen-address" help:"Address to listen on" default:":389"`
 
 	Backend struct {
 		Name string `name:"name" help:"Backend which stores the data" enum:"yaml" required:"" placeholder:"BACKEND"`
@@ -32,9 +38,11 @@ type Server struct {
 		KeyFile   string `name:"tls.key" help:"Path to the key file" optional:"" type:"filecontent" placeholder:"PATH"`
 	} `embed:""`
 
-	Version bool `name:"version" help:"Print version information and exit"`
+	Version    bool          `name:"version" help:"Print version information and exit"`
+	SessionTTL time.Duration `name:"session-ttl" help:"Duration of a BIND session before it expires" default:"168h"`
 }
 
+// Run starts the yaLDAP server using the configuration passed to the command.
 func (s Server) Run(_ *kong.Context) error {
 	logger := s.Logger()
 
@@ -55,12 +63,24 @@ func (s Server) Run(_ *kong.Context) error {
 		return err
 	}
 
-	err = server.Router(ldap.NewMux(logger, directory))
+	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	err = server.Router(ldap.NewMux(logger, directory, auth.NewSessions(ctx, s.SessionTTL)))
 	if err != nil {
 		return err
 	}
 
-	return server.Run(s.AddrListen, gldap.WithTLSConfig(tlsConfig))
+	g, ctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return server.Run(s.ListenAddr, gldap.WithTLSConfig(tlsConfig))
+	})
+
+	// Graceful shutdown.
+	<-ctx.Done()
+	if err := server.Stop(); err != nil {
+		return err
+	}
+	return g.Wait()
 }
 
 func (s Server) NewDirectory() (directory.Directory, error) {

@@ -7,7 +7,9 @@ import (
 type (
 	// Directory contains all current LDAP object tree, accessible using a base DN.
 	Directory interface {
-		// BaseDN	returns the LDAP object represented by the given DN. If no object found, it returns nil.
+		// BaseDN returns the LDAP object represented by the given DN. If no object found,
+		// it returns nil.
+		// If the given DN is empty, it returns the root object.
 		BaseDN(dn string) Object
 	}
 

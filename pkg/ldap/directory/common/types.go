@@ -97,7 +97,7 @@ func (obj Object) CanSearchOn(dn string) bool {
 func (obj Object) search(scope gldap.Scope, filter *ber.Packet) (objects []ldap.Object, err error) {
 	if match, err := filters.Match(&obj, filter); err != nil {
 		return nil, err
-	} else if match {
+	} else if match && scope != gldap.SingleLevel {
 		objects = append(objects, &obj)
 	}
 

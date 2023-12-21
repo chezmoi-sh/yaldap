@@ -8,6 +8,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/stretchr/testify/assert"
 	"github.com/xunleii/yaldap/pkg/cmd"
+	"github.com/xunleii/yaldap/pkg/utils"
 )
 
 func TestLogger_Format(t *testing.T) {
@@ -26,6 +27,7 @@ func TestLogger_Format(t *testing.T) {
 
 func TestLogger_Level(t *testing.T) {
 	levels := map[string]slog.Level{
+		"trace": utils.LevelTrace,
 		"debug": slog.LevelDebug,
 		"info":  slog.LevelInfo,
 		"warn":  slog.LevelWarn,

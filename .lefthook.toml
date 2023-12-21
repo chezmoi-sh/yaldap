@@ -11,7 +11,7 @@ tags = "go,lint"
 
 [pre-commit.commands.test]
 glob = "*.go"
-run = "go test ./..."
+run = "go test ./... -race"
 tags = "go,test"
 
 [prepare-commit-msg.commands.gitmoji]

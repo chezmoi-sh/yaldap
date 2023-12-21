@@ -52,8 +52,11 @@ func SubstringResolver(object ldap.Object, filter *ber.Packet) (bool, error) {
 		return false, &Error{goldap.FilterSubstrings, fmt.Errorf("internal error: %w", err)}
 	}
 
-	if attr, exists := object.Attributes()[attr]; exists {
-		return slices.IndexFunc(attr, func(s string) bool { return rx.MatchString(s) }) > -1, nil
+	for key, values := range object.Attributes() {
+		// NOTE: case-insensitive attribute
+		if strings.EqualFold(key, attr) && len(values) > 0 {
+			return slices.IndexFunc(values, func(s string) bool { return rx.MatchString(s) }) > -1, nil
+		}
 	}
 	return false, nil
 }
