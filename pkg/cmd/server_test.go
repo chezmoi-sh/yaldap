@@ -18,14 +18,14 @@ import (
 
 func TestServer_Defaults(t *testing.T) {
 	var actual, expected Server
-	expected.AddrListen = ":389"
+	expected.ListenAddr = ":389"
 	expected.Base.Log.Format = "json"
 	expected.Base.Log.Level = LogLevel(slog.LevelInfo)
 	expected.Backend.Name = "yaml"
 	expected.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml" //nolint:goconst
+	expected.SessionTTL = 168 * time.Hour
 	expected.TLS.Enable = false
 	expected.TLS.MutualTLS = false
-	expected.SessionTTL = 168 * time.Hour
 
 	os.Args = []string{"...", "--backend.name", "yaml", "--backend.url", "file://../ldap/directory/yaml/fixtures/basic.yaml"}
 	kong.Parse(&actual)
@@ -33,10 +33,11 @@ func TestServer_Defaults(t *testing.T) {
 }
 
 func TestServer_YAML_Simple(t *testing.T) {
-	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t)), SessionTTL: 1 * time.Second}
+	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
+	server.SessionTTL = time.Hour
 
 	go func() { assert.NoError(t, server.Run(nil)) }()
 
@@ -44,7 +45,7 @@ func TestServer_YAML_Simple(t *testing.T) {
 	require.Eventually(t,
 		func() bool {
 			var err error
-			client, err = ldap.DialURL(fmt.Sprintf("ldap://%s", server.AddrListen))
+			client, err = ldap.DialURL(fmt.Sprintf("ldap://%s", server.ListenAddr))
 			return assert.NoError(t, err)
 		},
 		500*time.Millisecond,
@@ -61,10 +62,11 @@ func TestServer_YAML_WithTLS(t *testing.T) {
 	cert, err := ca.NewKeyPair("localhost")
 	require.NoError(t, err)
 
-	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t))}
+	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
+	server.SessionTTL = time.Hour
 	server.TLS.Enable = true
 	server.TLS.CAFile = string(ca.PublicKey())
 	server.TLS.CertFile = string(cert.PublicKey())
@@ -76,7 +78,7 @@ func TestServer_YAML_WithTLS(t *testing.T) {
 	require.Eventually(t,
 		func() bool {
 			client, err = ldap.DialURL(
-				fmt.Sprintf("ldaps://%s", server.AddrListen),
+				fmt.Sprintf("ldaps://%s", server.ListenAddr),
 				ldap.DialWithTLSConfig(&tls.Config{RootCAs: ca.CertPool()}),
 			)
 			return assert.NoError(t, err)
@@ -95,10 +97,11 @@ func TestServer_YAML_WithMutualTLS(t *testing.T) {
 	keypair, err := ca.NewKeyPair("localhost")
 	require.NoError(t, err)
 
-	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t))}
+	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
+	server.SessionTTL = time.Hour
 	server.TLS.Enable = true
 	server.TLS.MutualTLS = true
 	server.TLS.CAFile = string(ca.PublicKey())
@@ -118,7 +121,7 @@ func TestServer_YAML_WithMutualTLS(t *testing.T) {
 	require.Eventually(t,
 		func() bool {
 			client, err = ldap.DialURL(
-				fmt.Sprintf("ldaps://%s", server.AddrListen),
+				fmt.Sprintf("ldaps://%s", server.ListenAddr),
 				ldap.DialWithTLSConfig(&tls.Config{
 					RootCAs:      ca.CertPool(),
 					Certificates: []tls.Certificate{cert},
