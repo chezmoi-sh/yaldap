@@ -5,8 +5,10 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"slices"
 
 	"github.com/alecthomas/kong"
+	"github.com/prometheus/common/version"
 	"github.com/xunleii/yaldap/pkg/utils"
 )
 
@@ -16,6 +18,8 @@ type (
 			Format string   `name:"format" enum:"text,json" help:"Log format" default:"json"`
 			Level  LogLevel `name:"level" help:"Log level" default:"info"`
 		} `embed:"" prefix:"log."`
+
+		Version bool `name:"version" help:"Print version information and exit"`
 	}
 	LogLevel slog.Level
 )
@@ -37,6 +41,15 @@ func (b Base) Logger() *slog.Logger {
 	default:
 		return slog.Default()
 	}
+}
+
+// PrintVersionIfNeeded prints the version information and exits if the version flag is set.
+func (b Base) BeforeReset(ctx *kong.Context) error {
+	if slices.Contains(ctx.Args, "--version") {
+		fmt.Println(version.Print(ctx.Model.Name)) //nolint:forbidigo
+		os.Exit(0)
+	}
+	return nil
 }
 
 func (l *LogLevel) Decode(ctx *kong.DecodeContext) error {
