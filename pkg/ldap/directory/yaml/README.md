@@ -1,13 +1,10 @@
 # LDAP directory implementation for YAML format
 
 ## Why using YAML?
-Nowadays, I found that `YAML` is overused to configure things that sometimes requires more simple markup languages (`ini`, `txt`, ...),
-or mode specific DSL (like `hcl`). Of course, `YAML` is now a well known markup language and can be easily use by almost
-everyone.
+Nowadays, I found that `YAML` is overused to configure things that sometimes requires more simple markup languages (`ini`, `txt`, ...), or mode specific DSL (like `hcl`). Of course, `YAML` is now a well known markup language and can be easily use by almost everyone.
 However, I personally chose `YAML` because it gives me a better representation of the directory structure;
-I picture an LDAP directory as a file directory, with folders (`containers`) and files (`leafs`). The fact that `YAML`
-uses indentation to define the depth of a field reminds me the `tree` command and helps me a lot in the global
-representation of the LDAP directory.
+I picture an LDAP directory as a file directory, with folders (`containers`) and files (`leafs`). The fact that `YAML` uses indentation to define the depth of a field reminds me the `tree` command and helps me a lot in the global representation of the LDAP directory.
+
 
 ## Syntax
 As explained above, I chose the `YAML` format because it allows the LDAP directory to be represented like this:
@@ -32,7 +29,7 @@ dc:org: #dn: dc=org
             └── cn:eve: #dn: cn=eve,ou=people,c=uk,dc=exa
 ```
 
-### Rules of this syntax
+### Rules of the syntax
 
 - A `LDAP` object is represented by a `YAML` mapping node
   - All child `LDAP` objects are represented by `YAML` mappings nodes inside the parent `YAML` mapping node
@@ -49,6 +46,12 @@ dc:org: #dn: dc=org
   - `!!ldap/acl:deny-on` denies the current object to search object inside the given DN
     - Can be a scalar (one) or a sequence (several) node
     - **These values are not stored inside the attribute**
+
+### Extension: `go` template
+To extend the `YAML` syntax _(injecting secrets for example)_, the `YAML` parser will use the `text/template` package to parse the `YAML` file.
+The format is the same as all other Go template (see [text/template](https://pkg.go.dev/text/template)) and uses `sprig` to add functions _(see http://masterminds.github.io/sprig/ for the list)_.  
+Beside that, the `YAML` parser will add some functions to help the parsing:
+- `readFile`: reads a file and return its content as a string (see [readFile](https://pkg.go.dev/io/ioutil#ReadFile))
 
 ### Example
 
@@ -88,7 +91,7 @@ dc:org: #dn: dc=org
           gidNumber: 1000
           loginShell: /bin/bash
           homeDirectory: /home/alice
-          userPassword: !!ldap/bind:password alice
+          userPassword: !!ldap/bind:password {{ index (readFile "/run/secrets/passwords.json" | fromJson) alice }}
           usermail: alice@example.org
 
         cn:bob: #dn: cn=bob,ou=people,c=global,dc=example,dc=org
@@ -100,7 +103,7 @@ dc:org: #dn: dc=org
           homeDirectory: /home/bob
           uidNumber: 1001
           gidNumber: 1001
-          userPassword: !!ldap/bind:password  bob
+          userPassword: !!ldap/bind:password {{ index (readFile "/run/secrets/passwords.json" | fromJson) bob }}
 
     c:fr: #dn: c=fr,dc=example,dc=org
       ou:people: #dn: ou=people,c=fr,dc=example,dc=org
@@ -114,7 +117,7 @@ dc:org: #dn: dc=org
           homeDirectory: /home/charlie
           uidNumber: 1100
           gidNumber: 1001
-          userPassword: !!ldap/bind:password charlie
+          userPassword: !!ldap/bind:password {{ index (readFile "/run/secrets/passwords.json" | fromJson) charlie }}
 
     c:uk: #dn: c=uk,dc=example,dc=org
       ou:people: #dn: ou=people,c=fr,dc=example,dc=org
@@ -125,21 +128,10 @@ dc:org: #dn: dc=org
           homeDirectory: /home/eve
           uidNumber: 1003
           gidNumber: 1002
-          userPassword: eve
+          userPassword: {{ index (readFile "/run/secrets/passwords.json" | fromJson) eve }}
 ```
 
 ## RFCs
-### Go-templates (at boot/at runtime) (12/06/2022)
-Using `go-template` could be used to add some "smart" configurations and allows dynamic values like password. For example,
-we can store the password on Vault and use them directly inside the LDAP; customizations are easy (just need to add new 
-function) and as a security layer for sensitive information like password. It also adds the ability to update password
-without restarting/generating the LDAP directory.
-
-I suggest two mechanism:
-- `go-templating` during runtime, inside LDAP attribute. Just before generating the attribute values, we can interpolate
-  these dynamic values. To achieve this goal, we can make custom function to generate a go-template function that will
-  be called during runtime execution.
-- `go-templating` during the LDAP directory generation.
 
 ### Schema generation (12/06/2022)
 Some LDAP tools needs metadata like `objectclass` and `attributes` definition. _Need more details_

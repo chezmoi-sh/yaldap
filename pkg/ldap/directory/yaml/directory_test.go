@@ -11,8 +11,31 @@ import (
 func TestNewDirectory_NoFile(t *testing.T) {
 	directory, err := NewDirectory("fixtures/does-not-exist.yaml")
 
-	assert.EqualError(t, err, "unable to read LDAP YAML file: open fixtures/does-not-exist.yaml: no such file or directory")
+	assert.EqualError(t, err, "unable to read YAML directory file: open fixtures/does-not-exist.yaml: no such file or directory")
 	assert.Nil(t, directory)
+}
+
+func TestNewDirectory_InvalidYAML(t *testing.T) {
+	directory, err := NewDirectory("fixtures/basic.xml")
+
+	assert.EqualError(t, err, "invalid LDAP YAML document at line 1, column 1: expected a mapping node (aka. dictionary) as root node, got a scalar node (aka. primitive)")
+	assert.Nil(t, directory)
+}
+
+func TestNewDirectory_InvalidTemplate(t *testing.T) {
+	t.Run("invalid template", func(t *testing.T) {
+		directory, err := NewDirectory("fixtures/invalid/template.yaml")
+
+		assert.EqualError(t, err, "unable to parse YAML directory file: template: LDAP YAML Directory:1: function \"for\" not defined")
+		assert.Nil(t, directory)
+	})
+
+	t.Run("invalid `readFile` function", func(t *testing.T) {
+		directory, err := NewDirectory("fixtures/invalid/template.readFileFnc.yaml")
+
+		assert.EqualError(t, err, "unable to parse YAML directory file: template: LDAP YAML Directory:1:30: executing \"LDAP YAML Directory\" at <readFile \"users.json\">: error calling readFile: open users.json: no such file or directory")
+		assert.Nil(t, directory)
+	})
 }
 
 func TestNewDirectoryFromYAML_ValidYAML(t *testing.T) {

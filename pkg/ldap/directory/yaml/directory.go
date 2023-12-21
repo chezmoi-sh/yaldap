@@ -22,11 +22,24 @@ type (
 )
 
 func NewDirectory(url string) (ldap.Directory, error) {
-	raw, err := os.ReadFile(strings.TrimPrefix(url, "file://"))
+	url = strings.TrimPrefix(url, "file://")
+	raw, err := os.ReadFile(url)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read LDAP YAML file: %w", err)
+		return nil, fmt.Errorf("unable to read YAML directory file: %w", err)
 	}
-	return NewDirectoryFromYAML(raw)
+
+	template, err := yamlDirectoryTemplate.Parse(string(raw))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse YAML directory file: %w", err)
+	}
+
+	buf := bytes.NewBuffer(nil)
+	err = template.Execute(buf, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse YAML directory file: %w", err)
+	}
+
+	return NewDirectoryFromYAML(buf.Bytes())
 }
 
 func NewDirectoryFromYAML(raw []byte) (ldap.Directory, error) {

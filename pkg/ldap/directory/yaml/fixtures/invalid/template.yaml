@@ -1,0 +1,7 @@
+{{ for $user, $password := (readFile "users.json" | fromJson) }}
+cd:{{ $user }}:
+  objectClass: posixAccount
+
+  uid: {{ $user }}
+  userPassword: {{ $password }}
+{{ end }}
