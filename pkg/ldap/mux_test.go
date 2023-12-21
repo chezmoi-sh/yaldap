@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap"
 	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
@@ -33,6 +34,7 @@ type (
 
 func (suite *LDAPTestSuite) SetupSuite() {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	sessions := auth.NewSessions(context.Background(), time.Minute)
 
 	directory, err := yamldir.NewDirectoryFromYAML([]byte(`
 dc:org:
@@ -65,7 +67,7 @@ dc:org:
 	suite.Server, err = gldap.NewServer()
 	suite.Require().NoError(err)
 
-	err = suite.Server.Router(ldap.NewMux(context.Background(), logger, directory))
+	err = suite.Server.Router(ldap.NewMux(logger, directory, sessions))
 	suite.Require().NoError(err)
 
 	go func() {

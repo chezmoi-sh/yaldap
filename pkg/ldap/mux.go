@@ -1,11 +1,9 @@
 package ldap
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/jimlambrt/gldap"
 	"github.com/xunleii/yaldap/internal/ldap/auth"
@@ -23,10 +21,10 @@ type server struct {
 }
 
 // NewMux creates a new LDAP server.
-func NewMux(ctx context.Context, logger *slog.Logger, directory directory.Directory) *gldap.Mux {
+func NewMux(logger *slog.Logger, directory directory.Directory, sessions *auth.Sessions) *gldap.Mux {
 	server := &server{
 		logger:    logger,
-		sessions:  auth.NewSessions(ctx, time.Hour),
+		sessions:  sessions,
 		directory: directory,
 	}
 	mux, _ := gldap.NewMux()

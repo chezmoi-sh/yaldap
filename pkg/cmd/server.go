@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/jimlambrt/gldap"
+	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
 	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
@@ -36,7 +38,8 @@ type Server struct {
 		KeyFile   string `name:"tls.key" help:"Path to the key file" optional:"" type:"filecontent" placeholder:"PATH"`
 	} `embed:""`
 
-	Version bool `name:"version" help:"Print version information and exit"`
+	Version    bool          `name:"version" help:"Print version information and exit"`
+	SessionTTL time.Duration `name:"session-ttl" help:"Duration of a BIND session before it expires" default:"168h"`
 }
 
 // Run starts the yaLDAP server using the configuration passed to the command.
@@ -62,7 +65,7 @@ func (s Server) Run(_ *kong.Context) error {
 
 	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 
-	err = server.Router(ldap.NewMux(ctx, logger, directory))
+	err = server.Router(ldap.NewMux(logger, directory, auth.NewSessions(ctx, s.SessionTTL)))
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,7 @@ func TestServer_Defaults(t *testing.T) {
 	expected.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml" //nolint:goconst
 	expected.TLS.Enable = false
 	expected.TLS.MutualTLS = false
+	expected.SessionTTL = 168 * time.Hour
 
 	os.Args = []string{"...", "--backend.name", "yaml", "--backend.url", "file://../ldap/directory/yaml/fixtures/basic.yaml"}
 	kong.Parse(&actual)
@@ -32,7 +33,7 @@ func TestServer_Defaults(t *testing.T) {
 }
 
 func TestServer_YAML_Simple(t *testing.T) {
-	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t))}
+	server := Server{AddrListen: fmt.Sprintf("localhost:%d", freePort(t)), SessionTTL: 1 * time.Second}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
