@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,12 +14,12 @@ type (
 	// allowed to perform operations.
 	Sessions struct {
 		reg *xsync.MapOf[int, *Session]
+		ttl time.Duration
 	}
 
 	// Session represents a single LDAP authenticated connection.
 	Session struct {
 		refreshable bool
-		ttl         time.Duration
 
 		expireAt time.Time
 		obj      ldap.Object
@@ -31,23 +32,39 @@ type (
 	Error struct{ error }
 )
 
-const defaultTTL = 5 * time.Minute
-
 // NewSessions returns a new AuthnConns instance.
-func NewSessions() *Sessions {
-	return &Sessions{
+func NewSessions(ctx context.Context, ttl time.Duration) *Sessions {
+	sessions := &Sessions{
 		reg: xsync.NewMapOf[int, *Session](),
+		ttl: ttl,
 	}
+
+	// Run the GC every TTL/2
+	go func() {
+		ticker := time.NewTicker(ttl / 2)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				sessions.GC()
+			}
+		}
+	}()
+
+	return sessions
 }
 
 // NewSession adds the given LDAP object the list of authenticated connections.
 func (sessions *Sessions) NewSession(id int, obj ldap.Object, opts ...SessionOption) error {
-	session := &Session{ttl: defaultTTL, obj: obj}
+	session := &Session{obj: obj}
 	for _, opt := range opts {
 		opt(session)
 	}
 
-	session.expireAt = time.Now().Add(session.ttl)
+	session.expireAt = time.Now().Add(sessions.ttl)
 
 	eobj := sessions.Session(id)
 	if eobj != nil {
@@ -57,6 +74,10 @@ func (sessions *Sessions) NewSession(id int, obj ldap.Object, opts ...SessionOpt
 	sessions.reg.Store(id, session)
 	return nil
 }
+
+// Delete removes the given connection ID from the list of authenticated
+// connections.
+func (sessions *Sessions) Delete(id int) { sessions.reg.Delete(id) }
 
 // Session returns the LDAP object if it is authenticated. Otherwise, if the
 // connection ID doesn't exist or as expired, it returns nil.
@@ -72,10 +93,20 @@ func (sessions *Sessions) Session(id int) *Session {
 		sessions.reg.Delete(id)
 		return nil
 	case session.refreshable:
-		session.expireAt = time.Now().Add(session.ttl)
+		session.expireAt = time.Now().Add(sessions.ttl)
 	}
 
 	return session
+}
+
+// GC removes all expired connections from the list of authenticated.
+func (sessions Sessions) GC() {
+	sessions.reg.Range(func(key int, value *Session) bool {
+		if value.expireAt.Before(time.Now()) {
+			sessions.reg.Delete(key)
+		}
+		return true
+	})
 }
 
 // Object returns the LDAP object associated with the given session.
@@ -83,13 +114,8 @@ func (session Session) Object() ldap.Object {
 	return session.obj
 }
 
-// AuthnRefreshable allows the given conn to have its expiration date increased
+// WithRefreshable allows the given conn to have its expiration date increased
 // after each operation.
-func AuthnRefreshable() SessionOption {
+func WithRefreshable() SessionOption {
 	return func(session *Session) { session.refreshable = true }
-}
-
-// AuthnTTL customizes the given conn TTL.
-func AuthnTTL(ttl time.Duration) SessionOption {
-	return func(session *Session) { session.ttl = ttl }
 }

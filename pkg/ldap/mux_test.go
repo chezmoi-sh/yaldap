@@ -1,6 +1,7 @@
 package ldap_test
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"testing"
@@ -64,7 +65,7 @@ dc:org:
 	suite.Server, err = gldap.NewServer()
 	suite.Require().NoError(err)
 
-	err = suite.Server.Router(ldap.NewMux(logger, directory))
+	err = suite.Server.Router(ldap.NewMux(context.Background(), logger, directory))
 	suite.Require().NoError(err)
 
 	go func() {

@@ -60,18 +60,19 @@ func (s Server) Run(_ *kong.Context) error {
 		return err
 	}
 
-	err = server.Router(ldap.NewMux(logger, directory))
+	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+
+	err = server.Router(ldap.NewMux(ctx, logger, directory))
 	if err != nil {
 		return err
 	}
 
-	g, ctx := errgroup.WithContext(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return server.Run(s.AddrListen, gldap.WithTLSConfig(tlsConfig))
 	})
 
 	// Graceful shutdown.
-	ctx, _ = signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	<-ctx.Done()
 	if err := server.Stop(); err != nil {
 		return err
