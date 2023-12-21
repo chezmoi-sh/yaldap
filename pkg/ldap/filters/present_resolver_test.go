@@ -23,6 +23,11 @@ func TestPresentResolver(t *testing.T) {
 			filter:   "(password=*)",
 			expected: assert.False,
 		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(memberof=*)",
+			expected: assert.True,
+		},
 	}
 
 	for _, tt := range tests {

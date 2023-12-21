@@ -27,7 +27,7 @@ func TestParseLDAPObject_Basic(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj.SubObjects["go:test"].SubObjects)
 }
@@ -67,7 +67,7 @@ ou:people:
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj.SubObjects["go:test"].SubObjects)
 }
@@ -118,7 +118,7 @@ ou:people:
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj.SubObjects["go:test"].SubObjects)
 }
@@ -127,12 +127,12 @@ func TestParseLDAPObject_WithMergeField(t *testing.T) {
 	raw := `
 ou:people:
   uid:alice: &alice
-    objectclass: [posixAccount]
+    objectClass: [posixAccount]
     memberOf: [admin, user, h4ck3r]
     givenname: alice
   uid:bob:
     <<: *alice
-    objectclass: [UserMail]
+    objectClass: [UserMail]
     givenname: bob
 `
 	expect := map[string]*common.Object{
@@ -146,7 +146,7 @@ ou:people:
 							DN: "uid=alice,ou=people,go=test",
 							Attributes: ldap.Attributes{
 								"uid":         []string{"alice"},
-								"objectclass": []string{"posixAccount"},
+								"objectClass": []string{"posixAccount"},
 								"memberOf":    []string{"admin", "user", "h4ck3r"},
 								"givenname":   []string{"alice"},
 							},
@@ -158,7 +158,7 @@ ou:people:
 							DN: "uid=bob,ou=people,go=test",
 							Attributes: ldap.Attributes{
 								"uid":         []string{"bob"},
-								"objectclass": []string{"UserMail"},
+								"objectClass": []string{"UserMail"},
 								"memberOf":    []string{"admin", "user", "h4ck3r"},
 								"givenname":   []string{"bob"},
 							},
@@ -175,7 +175,7 @@ ou:people:
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj.SubObjects["go:test"].SubObjects)
 }
@@ -189,7 +189,7 @@ func TestParseLDAPObject_WithInvalidKey(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.EqualError(t, err, expectErr)
 }
 
@@ -207,7 +207,7 @@ ou:people:
 	require.NoError(t, err)
 
 	obj := &common.Object{ImplObject: common.ImplObject{SubObjects: map[string]*common.Object{}}}
-	err = parseLDAPObject(obj, "go:test", node.Content[0])
+	err = parseLDAPObject(obj, &yaml.Node{Value: "go:test"}, node.Content[0])
 	assert.EqualError(t, err, expectErr)
 }
 
@@ -225,7 +225,7 @@ func TestParseLDAPAttribute_Basic(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -243,7 +243,7 @@ func TestParseLDAPAttribute_WithNullValue(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -265,7 +265,7 @@ func TestParseLDAPAttribute_WithBindPassword(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -286,7 +286,7 @@ func TestParseLDAPAttribute_WithAllowedOn(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -308,7 +308,7 @@ func TestParseLDAPAttribute_WithMultipleAllowedOn(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -329,7 +329,7 @@ func TestParseLDAPAttribute_WithDeniedOn(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -351,7 +351,7 @@ func TestParseLDAPAttribute_WithMultipleDeniedOn(t *testing.T) {
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -383,7 +383,7 @@ authz:
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.NoError(t, err)
 	assert.Equal(t, expect, obj)
 }
@@ -401,6 +401,27 @@ invalid:
 	require.NoError(t, err)
 
 	obj := &common.Object{}
-	err = parseLDAPAttribute(obj, node.Content[0].Content[0].Value, node.Content[0].Content[1])
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
 	assert.EqualError(t, err, expectErr)
+}
+
+func TestParseLDAPAttribute_WithDupplicateAttribute(t *testing.T) {
+	rawAttr1 := `valid: true`
+	rawAttr2 := `Valid: number`
+
+	expectErr := "invalid LDAP YAML document at line 1, column 1: invalid attribute: 'Valid' is already defined (case-insensitive match with 'valid')"
+
+	var node yaml.Node
+	err := yaml.Unmarshal([]byte(rawAttr1), &node)
+	require.NoError(t, err)
+
+	obj := &common.Object{}
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
+	require.NoError(t, err)
+
+	err = yaml.Unmarshal([]byte(rawAttr2), &node)
+	require.NoError(t, err)
+
+	err = parseLDAPAttribute(obj, node.Content[0].Content[0], node.Content[0].Content[1])
+	require.EqualError(t, err, expectErr)
 }

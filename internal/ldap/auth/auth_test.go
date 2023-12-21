@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func (o mockLDAPObject) Bind(string) bool                                  { ret
 func (o mockLDAPObject) CanSearchOn(string) bool                           { return true }
 
 func TestSessions_NewSession(t *testing.T) {
-	sessions := NewSessions()
+	sessions := NewSessions(context.Background(), time.Millisecond)
 
 	t.Run("AddSession", func(t *testing.T) {
 		obj := &mockLDAPObject{}
@@ -36,12 +37,6 @@ func TestSessions_NewSession(t *testing.T) {
 	t.Run("AddAlreadyExistingSession", func(t *testing.T) {
 		err := sessions.NewSession(0, &mockLDAPObject{})
 		assert.Error(t, err)
-	})
-
-	_ = sessions.NewSession(1, &mockLDAPObject{}, AuthnTTL(0))
-	t.Run("AddAlreadyExistingButExpiredSession", func(t *testing.T) {
-		err := sessions.NewSession(1, &mockLDAPObject{})
-		assert.NoError(t, err)
 	})
 }
 
@@ -70,7 +65,7 @@ func TestSessions_NewSession_race(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sessions := NewSessions()
+			sessions := NewSessions(context.Background(), time.Millisecond)
 
 			wg := sync.WaitGroup{}
 			for i, objs := range tt.objs {
@@ -91,8 +86,58 @@ func TestSessions_NewSession_race(t *testing.T) {
 	}
 }
 
+func TestSessions_Delete(t *testing.T) {
+	sessions := NewSessions(context.Background(), time.Millisecond)
+	_ = sessions.NewSession(0, &mockLDAPObject{})
+
+	t.Run("DeleteExistingSession", func(t *testing.T) {
+		sessions.Delete(0)
+
+		_, exists := sessions.reg.Load(0)
+		assert.False(t, exists)
+	})
+
+	t.Run("DeleteNonExistingSession", func(t *testing.T) {
+		sessions.Delete(1)
+
+		_, exists := sessions.reg.Load(1)
+		assert.False(t, exists)
+	})
+}
+
+func TestSessions_GC(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sessions := NewSessions(ctx, time.Millisecond)
+
+	_ = sessions.NewSession(0, &mockLDAPObject{})
+	t.Run("GCNonExpiredSession", func(t *testing.T) {
+		sessions.GC()
+
+		_, exists := sessions.reg.Load(0)
+		assert.True(t, exists)
+	})
+
+	t.Run("GCExpiredSession", func(t *testing.T) {
+		assert.Eventually(t, func() bool {
+			sessions.GC()
+
+			_, exists := sessions.reg.Load(0)
+			return !exists
+		}, time.Millisecond*5, time.Millisecond)
+	})
+
+	_ = sessions.NewSession(1, &mockLDAPObject{})
+	t.Run("GCGoroutine", func(t *testing.T) {
+		assert.Eventually(t, func() bool {
+			_, exists := sessions.reg.Load(1)
+			return !exists
+		}, time.Millisecond*5, time.Millisecond)
+	})
+}
+
 func TestSession_Session(t *testing.T) {
-	sessions := NewSessions()
+	sessions := NewSessions(context.Background(), time.Millisecond)
 	obj := &mockLDAPObject{}
 	_ = sessions.NewSession(0, obj)
 
@@ -108,34 +153,37 @@ func TestSession_Session(t *testing.T) {
 		assert.Nil(t, session)
 	})
 
-	_ = sessions.NewSession(1, &mockLDAPObject{}, AuthnTTL(0))
+	_ = sessions.NewSession(1, &mockLDAPObject{})
 	t.Run("GetExpiredSession", func(t *testing.T) {
-		session := sessions.Session(1)
-		assert.Nil(t, session)
+		assert.Eventually(t, func() bool {
+			session := sessions.Session(1)
+			return assert.Nil(t, session)
+		}, time.Millisecond*5, time.Millisecond)
 	})
 
-	_ = sessions.NewSession(2, &mockLDAPObject{}, AuthnRefreshable())
+	_ = sessions.NewSession(2, &mockLDAPObject{})
+	_ = sessions.NewSession(3, &mockLDAPObject{}, WithRefreshable())
 	t.Run("GetRefreshableSession", func(t *testing.T) {
-		session, exists := sessions.reg.Load(0)
+		session, exists := sessions.reg.Load(2)
 		require.True(t, exists)
 
 		before := session.expireAt
-		sessions.Session(0)
+		sessions.Session(2)
 		after := session.expireAt
 		assert.False(t, after.After(before))
 
-		session, exists = sessions.reg.Load(2)
+		session, exists = sessions.reg.Load(3)
 		require.True(t, exists)
 
 		before = session.expireAt
-		sessions.Session(2)
+		sessions.Session(3)
 		after = session.expireAt
 		assert.True(t, after.After(before))
 	})
 }
 
 func TestSessions_Session_race(t *testing.T) {
-	sessions := NewSessions()
+	sessions := NewSessions(context.Background(), time.Millisecond)
 	for i := 0; i < 5; i++ {
 		_ = sessions.NewSession(i, &mockLDAPObject{})
 	}
@@ -175,7 +223,7 @@ func TestSessions_Session_race(t *testing.T) {
 }
 
 func TestSessionRefreshable(t *testing.T) {
-	sessions := NewSessions()
+	sessions := NewSessions(context.Background(), time.Millisecond)
 
 	_ = sessions.NewSession(0, &mockLDAPObject{})
 	session, exists := sessions.reg.Load(0)
@@ -183,25 +231,9 @@ func TestSessionRefreshable(t *testing.T) {
 	require.True(t, exists)
 	require.False(t, session.refreshable)
 
-	_ = sessions.NewSession(1, &mockLDAPObject{}, AuthnRefreshable())
+	_ = sessions.NewSession(1, &mockLDAPObject{}, WithRefreshable())
 	session, exists = sessions.reg.Load(1)
 
 	require.True(t, exists)
 	require.True(t, session.refreshable)
-}
-
-func TestSessionTTL(t *testing.T) {
-	sessions := NewSessions()
-
-	_ = sessions.NewSession(0, &mockLDAPObject{})
-	session, exists := sessions.reg.Load(0)
-
-	require.True(t, exists)
-	require.Equal(t, defaultTTL, session.ttl)
-
-	_ = sessions.NewSession(1, &mockLDAPObject{}, AuthnTTL(60*time.Second))
-	session, exists = sessions.reg.Load(1)
-
-	require.True(t, exists)
-	require.Equal(t, 60*time.Second, session.ttl)
 }

@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log"
 	"log/slog"
 	"runtime"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -13,15 +16,28 @@ import (
 
 type (
 	HashicorpLoggerWrapper struct {
-		*slog.Logger
+		Logger *slog.Logger
 
 		args []interface{}
 	}
+	HashicorpLoggerWriter struct {
+		logger *slog.Logger
+		level  slog.Level
+		buffer *bytes.Buffer
+		last   time.Time
+
+		rwm sync.RWMutex
+	}
+)
+
+const (
+	// TraceLevel designates finer-grained informational events than the Debug.
+	LevelTrace = slog.LevelDebug * 2
 )
 
 var (
 	hclogLevels = map[hclog.Level]slog.Level{
-		hclog.Trace:   slog.LevelDebug,
+		hclog.Trace:   LevelTrace,
 		hclog.Debug:   slog.LevelDebug,
 		hclog.Info:    slog.LevelInfo,
 		hclog.NoLevel: slog.LevelInfo,
@@ -29,6 +45,7 @@ var (
 		hclog.Error:   slog.LevelError,
 	}
 	slogLevels = map[slog.Level]hclog.Level{
+		LevelTrace:      hclog.Trace,
 		slog.LevelDebug: hclog.Debug,
 		slog.LevelInfo:  hclog.Info,
 		slog.LevelWarn:  hclog.Warn,
@@ -49,7 +66,7 @@ func (logger HashicorpLoggerWrapper) Log(level hclog.Level, msg string, args ...
 
 // Emit a message and key/value pairs at the TRACE level.
 func (logger HashicorpLoggerWrapper) Trace(msg string, args ...interface{}) {
-	logger.log(slog.LevelDebug, msg, args...)
+	logger.log(LevelTrace, msg, args...)
 }
 
 // Emit a message and key/value pairs at the DEBUG level.
@@ -75,7 +92,7 @@ func (logger HashicorpLoggerWrapper) Error(msg string, args ...interface{}) {
 // Indicate if TRACE logs would be emitted. This and the other Is* guards
 // are used to elide expensive logging code based on the current level.
 func (logger HashicorpLoggerWrapper) IsTrace() bool {
-	return logger.Logger.Enabled(context.TODO(), slog.LevelDebug)
+	return logger.Logger.Enabled(context.TODO(), LevelTrace)
 }
 
 // Indicate if DEBUG logs would be emitted. This and the other Is* guards.
@@ -85,7 +102,7 @@ func (logger HashicorpLoggerWrapper) IsDebug() bool {
 
 // Indicate if INFO logs would be emitted. This and the other Is* guards.
 func (logger HashicorpLoggerWrapper) IsInfo() bool {
-	return logger.Enabled(context.Background(), slog.LevelInfo)
+	return logger.Logger.Enabled(context.Background(), slog.LevelInfo)
 }
 
 // Indicate if WARN logs would be emitted. This and the other Is* guards.
@@ -140,7 +157,7 @@ func (logger HashicorpLoggerWrapper) GetLevel() hclog.Level {
 }
 
 func (logger HashicorpLoggerWrapper) getLevel() slog.Level {
-	for _, level := range []slog.Level{slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
+	for _, level := range []slog.Level{LevelTrace, slog.LevelDebug, slog.LevelInfo, slog.LevelWarn, slog.LevelError} {
 		if logger.Logger.Enabled(context.Background(), level) {
 			return level
 		}
@@ -149,13 +166,27 @@ func (logger HashicorpLoggerWrapper) getLevel() slog.Level {
 }
 
 // Return a value that conforms to the stdlib log.Logger interface.
-func (logger HashicorpLoggerWrapper) StandardLogger(*hclog.StandardLoggerOptions) *log.Logger {
-	panic("not implemented")
+func (logger HashicorpLoggerWrapper) StandardLogger(opts *hclog.StandardLoggerOptions) *log.Logger {
+	level := logger.getLevel()
+	if opts != nil {
+		level = hclogLevels[opts.ForceLevel]
+	}
+
+	return slog.NewLogLogger(logger.Logger.Handler(), level)
 }
 
 // Return a value that conforms to io.Writer, which can be passed into log.SetOutput().
+// NOTE: this is only used by gldap package to pretty print LDAP packets. For this
+// purpose, we will log messages only if the current level is lower than Trace.
 func (logger HashicorpLoggerWrapper) StandardWriter(*hclog.StandardLoggerOptions) io.Writer {
-	panic("not implemented")
+	writer := &HashicorpLoggerWriter{
+		logger: logger.Logger,
+		level:  LevelTrace,
+		buffer: bytes.NewBuffer(nil),
+		last:   time.Now(),
+	}
+	go writer.flushPeriodically()
+	return writer
 }
 
 func (logger HashicorpLoggerWrapper) log(level slog.Level, msg string, args ...interface{}) {
@@ -169,5 +200,42 @@ func (logger HashicorpLoggerWrapper) log(level slog.Level, msg string, args ...i
 
 	record := slog.NewRecord(time.Now(), level, msg, pcs[0])
 	record.Add(args...)
-	_ = logger.Handler().Handle(context.Background(), record)
+	_ = logger.Logger.Handler().Handle(context.Background(), record)
+}
+
+// Write implements io.Writer.
+func (writer *HashicorpLoggerWriter) Write(p []byte) (n int, err error) {
+	writer.rwm.Lock()
+	defer writer.rwm.Unlock()
+
+	if !writer.logger.Enabled(context.Background(), writer.level) {
+		return 0, nil
+	}
+
+	writer.last = time.Now()
+	return writer.buffer.Write(p)
+}
+
+func (writer *HashicorpLoggerWriter) flushPeriodically() {
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		writer.rwm.RLock()
+
+		if time.Since(writer.last) > 10*time.Millisecond && writer.buffer.Len() > 0 {
+			var pcs [1]uintptr
+			runtime.Callers(0, pcs[:])
+
+			record := slog.NewRecord(
+				time.Now(),
+				writer.level,
+				strings.TrimSuffix(writer.buffer.String(), "\n"),
+				pcs[0],
+			)
+			_ = writer.logger.Handler().Handle(context.Background(), record)
+			writer.buffer.Reset()
+		}
+		writer.rwm.RUnlock()
+	}
 }

@@ -1,11 +1,15 @@
 package ldap
 
 import (
+	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jimlambrt/gldap"
 	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap/directory"
+	"github.com/xunleii/yaldap/pkg/utils"
+	"golang.org/x/exp/slices"
 )
 
 // server is a ldap server that uses a Directory to accept and perform search.
@@ -17,15 +21,16 @@ type server struct {
 }
 
 // NewMux creates a new LDAP server.
-func NewMux(logger *slog.Logger, directory directory.Directory) *gldap.Mux {
+func NewMux(logger *slog.Logger, directory directory.Directory, sessions *auth.Sessions) *gldap.Mux {
 	server := &server{
 		logger:    logger,
-		sessions:  auth.NewSessions(),
+		sessions:  sessions,
 		directory: directory,
 	}
 	mux, _ := gldap.NewMux()
 
 	_ = mux.Bind(server.bind)
+	_ = mux.Unbind(server.unbind)
 	_ = mux.Search(server.search)
 	_ = mux.Add(server.add)
 	_ = mux.Modify(server.modify)
@@ -71,14 +76,7 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 		//       in order to avoid any bruteforce attack.
 		return
 	}
-	log = s.logger.With(
-		slog.String("method", "bind"),
-		slog.Group("session",
-			slog.Int("id", req.ConnectionID()),
-			slog.Int("request_id", req.ID),
-			slog.String("bind_dn", msg.UserName),
-		),
-	)
+	log = log.With(slog.String("bind_dn", obj.DN()))
 
 	err = s.sessions.NewSession(req.ConnectionID(), obj)
 	if err != nil {
@@ -90,6 +88,25 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	log.Info("bind successful")
 	resp.SetResultCode(gldap.ResultSuccess)
+}
+
+func (s *server) unbind(_ *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "unbind"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+
+	session := s.sessions.Session(req.ConnectionID())
+	if session == nil {
+		return
+	}
+	log = log.With(slog.String("bind_dn", session.Object().DN()))
+
+	s.sessions.Delete(req.ConnectionID())
+	log.Info("unbind successful")
 }
 
 // Search implements the LDAP search mechanism.
@@ -112,23 +129,21 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		resp.SetDiagnosticMessage(err.Error())
 		return
 	}
+	log = log.With(slog.Group("request",
+		slog.String("base_dn", msg.BaseDN),
+		slog.String("filter", msg.Filter),
+		slog.String("scope", utils.LDAPScopes[msg.Scope]),
+		slog.Any("attributes", msg.Attributes),
+	))
 
 	session := s.sessions.Session(req.ConnectionID())
 	if session == nil {
-		log.Error("no session found")
+		log.Error("session not found or expired")
 		resp.SetResultCode(gldap.ResultAuthorizationDenied)
 		return
 	}
 	obj := session.Object()
-	log = s.logger.With(
-		slog.String("method", "bind"),
-		slog.Group("session",
-			slog.Int("id", req.ConnectionID()),
-			slog.Int("request_id", req.ID),
-			slog.String("bind_dn", obj.DN()),
-		),
-		slog.String("base_dn", msg.BaseDN),
-	)
+	log = log.With(slog.String("bind_dn", obj.DN()))
 
 	baseDn := s.directory.BaseDN(msg.BaseDN)
 	if baseDn == nil {
@@ -137,12 +152,6 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
-	log.Debug(
-		"searching",
-		slog.Int64("scope", int64(msg.Scope)),
-		slog.String("filter", msg.Filter),
-		slog.Any("attributes", msg.Attributes),
-	)
 	entries, err := baseDn.Search(msg.Scope, msg.Filter)
 	if err != nil {
 		log.Error("unable to search", slog.String("error", err.Error()))
@@ -151,16 +160,27 @@ func (s *server) search(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
+	var count int
 	for _, entry := range entries {
 		if obj.CanSearchOn(entry.DN()) {
-			entry := req.NewSearchResponseEntry(
-				entry.DN(),
-				gldap.WithAttributes(entry.Attributes()),
-			)
-			_ = w.Write(entry)
+			resp := req.NewSearchResponseEntry(entry.DN())
+			attrs := entry.Attributes()
+
+			// Filter attributes if needed
+			for attr, values := range attrs {
+				if len(msg.Attributes) == 0 || slices.ContainsFunc(
+					msg.Attributes,
+					func(s string) bool { return strings.EqualFold(s, attr) },
+				) {
+					resp.AddAttribute(attr, values)
+				}
+			}
+
+			_ = w.Write(resp)
+			count++
 		}
 	}
-	log.Info("search successful")
+	log.Info(fmt.Sprintf("found %d entries", count))
 	resp.SetResultCode(gldap.ResultSuccess)
 }
 

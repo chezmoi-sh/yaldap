@@ -43,6 +43,11 @@ func TestApproxResolver(t *testing.T) {
 			filter:   "(memberOf~=398)",
 			expected: assert.True,
 		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(uidnumber~=1000)",
+			expected: assert.True,
+		},
 	}
 
 	for _, tt := range tests {
@@ -114,6 +119,11 @@ func TestEqualResolver(t *testing.T) {
 		{
 			filter:   "(memberOf=398)",
 			expected: assert.False,
+		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(uidnumber=1000)",
+			expected: assert.True,
 		},
 	}
 

@@ -47,6 +47,11 @@ func TestSubstringResolver(t *testing.T) {
 			filter:   "(memberOf=u*k*n)",
 			expected: assert.False,
 		},
+
+		{ // NOTE: case-insensitive attribute
+			filter:   "(memberof=ad*)",
+			expected: assert.True,
+		},
 	}
 
 	for _, tt := range tests {

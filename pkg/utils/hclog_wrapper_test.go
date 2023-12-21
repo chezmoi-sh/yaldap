@@ -21,7 +21,7 @@ func (suite *HashicorpLoggerWrapperTestSuite) SetupTest() {
 	suite.buffer = bytes.NewBuffer(nil)
 	suite.logger = slog.New(
 		slog.NewTextHandler(suite.buffer, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			Level: LevelTrace,
 			ReplaceAttr: func(_ []string, attr slog.Attr) slog.Attr {
 				switch attr.Key {
 				case "time":
@@ -47,7 +47,7 @@ func (suite *HashicorpLoggerWrapperTestSuite) TestLog() {
 			level:    hclog.Trace,
 			msg:      "test",
 			args:     []interface{}{"key", "value"},
-			expected: "time=0001-01-01T00:00:00.000Z level=DEBUG msg=test key=value\n",
+			expected: "time=0001-01-01T00:00:00.000Z level=DEBUG-4 msg=test key=value\n",
 		},
 		{
 			level:    hclog.Debug,
@@ -124,7 +124,7 @@ func (suite *HashicorpLoggerWrapperTestSuite) TestX() {
 		{
 			name:     "(*HashicorpLoggerWrapper).Trace",
 			logFn:    logger.Trace,
-			expected: "time=0001-01-01T00:00:00.000Z level=DEBUG msg=test key=value\n",
+			expected: "time=0001-01-01T00:00:00.000Z level=DEBUG-4 msg=test key=value\n",
 		},
 		{
 			name:     "(*HashicorpLoggerWrapper).Debug",
@@ -160,7 +160,7 @@ func (suite *HashicorpLoggerWrapperTestSuite) TestX() {
 func (suite *HashicorpLoggerWrapperTestSuite) TestIsX() {
 	var logger hclog.Logger = &HashicorpLoggerWrapper{
 		Logger: slog.New(slog.NewTextHandler(nil, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			Level: LevelTrace,
 		})),
 	}
 
@@ -284,19 +284,35 @@ func (suite *HashicorpLoggerWrapperTestSuite) TestGetLevel() {
 func (suite *HashicorpLoggerWrapperTestSuite) TestStandardLogger() {
 	var logger hclog.Logger = &HashicorpLoggerWrapper{Logger: suite.logger}
 
-	suite.PanicsWithValue(
-		"not implemented",
-		func() { logger.StandardLogger(nil) },
-	)
+	logger.StandardLogger(nil).Println("test")
+	suite.Equal("time=0001-01-01T00:00:00.000Z level=DEBUG-4 msg=test\n", suite.buffer.String())
+	suite.buffer.Reset()
+
+	logger.StandardLogger(&hclog.StandardLoggerOptions{ForceLevel: hclog.Warn}).Println("test")
+	suite.Equal("time=0001-01-01T00:00:00.000Z level=WARN msg=test\n", suite.buffer.String())
 }
 
 func (suite *HashicorpLoggerWrapperTestSuite) TestStandardWriter() {
-	var logger hclog.Logger = &HashicorpLoggerWrapper{Logger: suite.logger}
+	var logger hclog.Logger = &HashicorpLoggerWrapper{
+		Logger: slog.New(slog.NewTextHandler(suite.buffer, &slog.HandlerOptions{Level: LevelTrace})),
+	}
 
-	suite.PanicsWithValue(
-		"not implemented",
-		func() { logger.StandardWriter(nil) },
-	)
+	_, err := logger.StandardWriter(nil).Write([]byte("test"))
+	suite.NoError(err)
+
+	suite.Eventually(func() bool {
+		return suite.NotEmpty(suite.buffer.String())
+	}, time.Second, 100*time.Millisecond)
+	suite.buffer.Reset()
+
+	logger = &HashicorpLoggerWrapper{
+		Logger: slog.New(slog.NewTextHandler(suite.buffer, &slog.HandlerOptions{Level: slog.LevelWarn})),
+	}
+	_, err = logger.StandardWriter(&hclog.StandardLoggerOptions{ForceLevel: hclog.Trace}).Write([]byte("test"))
+	suite.NoError(err)
+	suite.Eventually(func() bool {
+		return suite.Empty(suite.buffer.String())
+	}, time.Second, 100*time.Millisecond)
 }
 
 func TestHashicorpLoggerWrapper(t *testing.T) {

@@ -1,6 +1,7 @@
 package ldap_test
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/xunleii/yaldap/internal/ldap/auth"
 	"github.com/xunleii/yaldap/pkg/ldap"
 	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
@@ -32,13 +34,14 @@ type (
 
 func (suite *LDAPTestSuite) SetupSuite() {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	sessions := auth.NewSessions(context.Background(), time.Minute)
 
 	directory, err := yamldir.NewDirectoryFromYAML([]byte(`
 dc:org:
-  objectclass: organization
+  objectClass: organization
   
   dc:example:
-    objectclass: organization
+    objectClass: organization
   
     ou:people:
       cn:alice:
@@ -46,25 +49,25 @@ dc:org:
           - !!ldap/acl:allow-on dc=example,dc=org
           - !!ldap/acl:deny-on cn=bob,ou=people,dc=example,dc=org
   
-        objectclass: person
+        objectClass: person
         userpassword: !!ldap/bind:password alice
   
       cn:bob:
-        objectclass: person
+        objectClass: person
         userpassword: !!ldap/bind:password ""
 
       cn:charlie:
-        objectclass: person
+        objectClass: person
   
   dc:example2:
-    objectclass: organization
+    objectClass: organization
 `))
 	suite.Require().NoError(err)
 
 	suite.Server, err = gldap.NewServer()
 	suite.Require().NoError(err)
 
-	err = suite.Server.Router(ldap.NewMux(logger, directory))
+	err = suite.Server.Router(ldap.NewMux(logger, directory, sessions))
 	suite.Require().NoError(err)
 
 	go func() {
@@ -134,6 +137,27 @@ func (suite *LDAPTestSuite) TestMux_Bind() {
 	})
 }
 
+func (suite *LDAPTestSuite) TestMux_Unbind() {
+	conn, err := suite.DialLDAP()
+	suite.Require().NoError(err)
+	defer conn.Close()
+
+	suite.T().Run("SuccessfulUnbind", func(t *testing.T) {
+		err = conn.Bind("cn=alice,ou=people,dc=example,dc=org", "alice")
+		suite.Require().NoError(err)
+
+		err = conn.Unbind() // gldap.Server automatically closes the connection after unbind
+		assert.NoError(t, err)
+
+		_, err = conn.Search(&goldap.SearchRequest{
+			BaseDN: "dc=org",
+			Scope:  goldap.ScopeWholeSubtree,
+			Filter: "(cn=alice)",
+		})
+		assert.EqualError(t, err, "LDAP Result Code 200 \"Network Error\": ldap: connection closed")
+	})
+}
+
 func (suite *LDAPTestSuite) TestMux_Search() {
 	conn, err := suite.DialLDAP()
 	suite.Require().NoError(err)
@@ -166,7 +190,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -176,7 +200,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 	})
 
 	suite.T().Run("FindAllObjectclass", func(t *testing.T) {
-		req := goldap.NewSearchRequest("dc=org", goldap.ScopeWholeSubtree, 0, 0, 0, false, "(objectclass=*)", nil, nil)
+		req := goldap.NewSearchRequest("dc=org", goldap.ScopeWholeSubtree, 0, 0, 0, false, "(objectClass=*)", nil, nil)
 		res, err := conn.Search(req)
 		require.NoError(t, err)
 
@@ -186,14 +210,14 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "dc=example,dc=org",
 					Attributes: map[string][]string{
 						"dc":          {"example"},
-						"objectclass": {"organization"},
+						"objectClass": {"organization"},
 					},
 				},
 				{
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -201,7 +225,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=charlie,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":          {"charlie"},
-						"objectclass": {"person"},
+						"objectClass": {"person"},
 					},
 				},
 			},
@@ -226,7 +250,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=alice,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":           {"alice"},
-						"objectclass":  {"person"},
+						"objectClass":  {"person"},
 						"userpassword": {"alice"},
 					},
 				},
@@ -234,7 +258,7 @@ func (suite *LDAPTestSuite) TestMux_Search() {
 					DN: "cn=charlie,ou=people,dc=example,dc=org",
 					Attributes: map[string][]string{
 						"cn":          {"charlie"},
-						"objectclass": {"person"},
+						"objectClass": {"person"},
 					},
 				},
 			},
