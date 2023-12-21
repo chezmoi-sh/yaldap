@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	xsync "github.com/puzpuzpuz/xsync/v3"
@@ -23,6 +24,8 @@ type (
 
 		expireAt time.Time
 		obj      ldap.Object
+
+		sync sync.RWMutex
 	}
 
 	// SessionOption customize a authnConn before its registration on authConns.
@@ -93,7 +96,9 @@ func (sessions *Sessions) Session(id int) *Session {
 		sessions.reg.Delete(id)
 		return nil
 	case session.refreshable:
+		session.sync.Lock()
 		session.expireAt = time.Now().Add(sessions.ttl)
+		session.sync.Unlock()
 	}
 
 	return session
@@ -102,6 +107,8 @@ func (sessions *Sessions) Session(id int) *Session {
 // GC removes all expired connections from the list of authenticated.
 func (sessions Sessions) GC() {
 	sessions.reg.Range(func(key int, value *Session) bool {
+		value.sync.RLock()
+		defer value.sync.RUnlock()
 		if value.expireAt.Before(time.Now()) {
 			sessions.reg.Delete(key)
 		}
@@ -110,7 +117,7 @@ func (sessions Sessions) GC() {
 }
 
 // Object returns the LDAP object associated with the given session.
-func (session Session) Object() ldap.Object {
+func (session *Session) Object() ldap.Object {
 	return session.obj
 }
 
