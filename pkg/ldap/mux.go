@@ -32,6 +32,7 @@ func NewMux(ctx context.Context, logger *slog.Logger, directory directory.Direct
 	mux, _ := gldap.NewMux()
 
 	_ = mux.Bind(server.bind)
+	_ = mux.Unbind(server.unbind)
 	_ = mux.Search(server.search)
 	_ = mux.Add(server.add)
 	_ = mux.Modify(server.modify)
@@ -89,6 +90,25 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 
 	log.Info("bind successful")
 	resp.SetResultCode(gldap.ResultSuccess)
+}
+
+func (s *server) unbind(_ *gldap.ResponseWriter, req *gldap.Request) {
+	log := s.logger.With(
+		slog.String("method", "unbind"),
+		slog.Group("session",
+			slog.Int("id", req.ConnectionID()),
+			slog.Int("request_id", req.ID),
+		),
+	)
+
+	session := s.sessions.Session(req.ConnectionID())
+	if session == nil {
+		return
+	}
+	log = log.With(slog.String("bind_dn", session.Object().DN()))
+
+	s.sessions.Delete(req.ConnectionID())
+	log.Info("unbind successful")
 }
 
 // Search implements the LDAP search mechanism.
