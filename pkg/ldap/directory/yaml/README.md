@@ -129,17 +129,6 @@ dc:org: #dn: dc=org
 ```
 
 ## RFCs
-### Go-templates (at boot/at runtime) (12/06/2022)
-Using `go-template` could be used to add some "smart" configurations and allows dynamic values like password. For example,
-we can store the password on Vault and use them directly inside the LDAP; customizations are easy (just need to add new 
-function) and as a security layer for sensitive information like password. It also adds the ability to update password
-without restarting/generating the LDAP directory.
-
-I suggest two mechanism:
-- `go-templating` during runtime, inside LDAP attribute. Just before generating the attribute values, we can interpolate
-  these dynamic values. To achieve this goal, we can make custom function to generate a go-template function that will
-  be called during runtime execution.
-- `go-templating` during the LDAP directory generation.
 
 ### Schema generation (12/06/2022)
 Some LDAP tools needs metadata like `objectclass` and `attributes` definition. _Need more details_
