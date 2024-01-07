@@ -33,9 +33,9 @@ type Server struct {
 	TLS struct {
 		Enable    bool   `name:"tls" help:"Enable TLS" default:"false" negatable:""`
 		MutualTLS bool   `name:"mtls" help:"Enable mutual TLS" default:"false" negatable:""`
-		CAFile    string `name:"tls.ca" help:"Path to the CA file" optional:"" type:"filecontent" placeholder:"PATH"`
-		CertFile  string `name:"tls.cert" help:"Path to the certificate file" optional:"" type:"filecontent" placeholder:"PATH"`
-		KeyFile   string `name:"tls.key" help:"Path to the key file" optional:"" type:"filecontent" placeholder:"PATH"`
+		CAFile    []byte `name:"tls.ca" help:"Path to the CA file" optional:"" type:"filecontent" placeholder:"PATH"`
+		CertFile  []byte `name:"tls.cert" help:"Path to the certificate file" optional:"" type:"filecontent" placeholder:"PATH"`
+		KeyFile   []byte `name:"tls.key" help:"Path to the key file" optional:"" type:"filecontent" placeholder:"PATH"`
 	} `embed:""`
 
 	SessionTTL time.Duration `name:"session-ttl" help:"Duration of a BIND session before it expires" default:"168h"`
@@ -97,7 +97,7 @@ func (s Server) TLSConfig() (*tls.Config, error) {
 		return nil, nil
 	}
 
-	cert, err := tls.X509KeyPair([]byte(s.TLS.CertFile), []byte(s.TLS.KeyFile))
+	cert, err := tls.X509KeyPair(s.TLS.CertFile, s.TLS.KeyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s Server) TLSConfig() (*tls.Config, error) {
 	// CA certificates are encoded in PEM format, so we need to decode it
 	// first in order to use it.
 	caCertPool := x509.NewCertPool()
-	caPEMBlock := []byte(s.TLS.CAFile)
+	caPEMBlock := s.TLS.CAFile
 	for {
 		var caDERBlock *pem.Block
 

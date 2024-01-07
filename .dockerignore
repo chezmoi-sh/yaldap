@@ -1,0 +1,11 @@
+# Ignore everything in the root ...
+/*
+
+# ... except what we want to keep
+!cmd/
+!pkg/
+!internal/
+
+!go.mod
+!go.sum
+!LICENSE
