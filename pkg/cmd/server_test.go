@@ -68,9 +68,9 @@ func TestServer_YAML_WithTLS(t *testing.T) {
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
 	server.SessionTTL = time.Hour
 	server.TLS.Enable = true
-	server.TLS.CAFile = string(ca.PublicKey())
-	server.TLS.CertFile = string(cert.PublicKey())
-	server.TLS.KeyFile = string(cert.PrivateKey())
+	server.TLS.CAFile = ca.PublicKey()
+	server.TLS.CertFile = cert.PublicKey()
+	server.TLS.KeyFile = cert.PrivateKey()
 
 	go func() { assert.NoError(t, server.Run(nil)) }()
 
@@ -104,9 +104,9 @@ func TestServer_YAML_WithMutualTLS(t *testing.T) {
 	server.SessionTTL = time.Hour
 	server.TLS.Enable = true
 	server.TLS.MutualTLS = true
-	server.TLS.CAFile = string(ca.PublicKey())
-	server.TLS.CertFile = string(keypair.PublicKey())
-	server.TLS.KeyFile = string(keypair.PrivateKey())
+	server.TLS.CAFile = ca.PublicKey()
+	server.TLS.CertFile = keypair.PublicKey()
+	server.TLS.KeyFile = keypair.PrivateKey()
 
 	go func() { assert.NoError(t, server.Run(nil)) }()
 
