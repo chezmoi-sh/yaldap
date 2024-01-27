@@ -26,7 +26,7 @@ RUN set -eux; \
 # ┌───────────────────────────────────────────────────────────────────────────┐
 # │ <runtime>: create the yaLDAP runtime image using all previous stages      │
 # └───────────────────────────────────────────────────────────────────────────┘
-FROM docker.io/library/alpine:3.19.0
+FROM docker.io/library/alpine:3.19.1
 
 # renovate: datasource=github-tags depName=xunleii/yaldap versioning=semver
 ARG YALDAP_VERSION="v0.1.1"
