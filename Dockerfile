@@ -29,7 +29,7 @@ RUN set -eux; \
 FROM docker.io/library/alpine:3.19.1
 
 # renovate: datasource=github-tags depName=xunleii/yaldap versioning=semver
-ARG YALDAP_VERSION="v0.1.1"
+ARG YALDAP_VERSION="v0.1.2"
 
 # renovate: datasource=repology depName=alpine_3_19/ca-certificates versioning=loose
 ARG CA_CERTIFICATES_VERSION=20230506-r0
