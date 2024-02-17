@@ -17,7 +17,7 @@ type mockLDAPObject map[string][]string
 func (o mockLDAPObject) DN() string                                        { return "" }
 func (o mockLDAPObject) Attributes() ldap.Attributes                       { return ldap.Attributes(o) }
 func (o mockLDAPObject) Search(gldap.Scope, string) ([]ldap.Object, error) { return nil, nil }
-func (o mockLDAPObject) Bind(string) bool                                  { return false }
+func (o mockLDAPObject) Bind(string) (bool, error)                         { return false, nil }
 func (o mockLDAPObject) CanSearchOn(string) bool                           { return true }
 
 func TestSessions_NewSession(t *testing.T) {
