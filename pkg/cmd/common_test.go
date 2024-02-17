@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/alecthomas/kong"
+	"github.com/chezmoi-sh/yaldap/pkg/cmd"
+	"github.com/chezmoi-sh/yaldap/pkg/utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/xunleii/yaldap/pkg/cmd"
-	"github.com/xunleii/yaldap/pkg/utils"
 )
 
 func TestLogger_Format(t *testing.T) {

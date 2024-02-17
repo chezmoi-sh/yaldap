@@ -3,13 +3,13 @@ package filters_test
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/filters"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
-	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
 var object = common.Object{

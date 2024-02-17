@@ -24,7 +24,7 @@ type (
 
 		// Bind returns true if the current object is able to authenticate and the password is correct.
 		// It returns false if the password is wrong and optional.None if it cannot be authenticated.
-		Bind(password string) bool
+		Bind(password string) (bool, error)
 		// CanSearchOn returns true if the current object is able to perform a search on the given DN.
 		CanSearchOn(dn string) bool
 	}

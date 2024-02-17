@@ -8,8 +8,8 @@ import (
 	"slices"
 
 	"github.com/alecthomas/kong"
+	"github.com/chezmoi-sh/yaldap/pkg/utils"
 	"github.com/prometheus/common/version"
-	"github.com/xunleii/yaldap/pkg/utils"
 )
 
 type (

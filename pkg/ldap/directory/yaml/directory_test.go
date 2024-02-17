@@ -3,9 +3,9 @@ package yamldir
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
 	"github.com/stretchr/testify/assert"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
 )
 
 func TestNewDirectory_NoFile(t *testing.T) {

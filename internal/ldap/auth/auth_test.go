@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	"github.com/jimlambrt/gldap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 type mockLDAPObject map[string][]string
@@ -17,7 +17,7 @@ type mockLDAPObject map[string][]string
 func (o mockLDAPObject) DN() string                                        { return "" }
 func (o mockLDAPObject) Attributes() ldap.Attributes                       { return ldap.Attributes(o) }
 func (o mockLDAPObject) Search(gldap.Scope, string) ([]ldap.Object, error) { return nil, nil }
-func (o mockLDAPObject) Bind(string) bool                                  { return false }
+func (o mockLDAPObject) Bind(string) (bool, error)                         { return false, nil }
 func (o mockLDAPObject) CanSearchOn(string) bool                           { return true }
 
 func TestSessions_NewSession(t *testing.T) {

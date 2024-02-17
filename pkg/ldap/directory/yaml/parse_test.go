@@ -3,10 +3,10 @@ package yamldir
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
 	"gopkg.in/yaml.v3"
 )
 
