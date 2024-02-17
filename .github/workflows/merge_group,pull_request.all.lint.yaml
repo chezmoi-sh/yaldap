@@ -1,0 +1,17 @@
+name: Lint everything (Trunk)
+
+on:
+  merge_group: {}
+  pull_request: {}
+
+permissions: read-all
+
+jobs:
+  trunk:
+    name: Trunk Check
+    permissions:
+      checks: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: trunk-io/trunk-action@97ecd21fe6c743bf7a606791584b683a7995c70e # v1.1.9
