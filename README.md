@@ -103,4 +103,22 @@ dc:org: #dn: dc=org
           userPassword: eve
 ```
 
+### Hashed passwords
+
+In order to avoid storing clear text passwords in the YAML file, yaLDAP supports hashed passwords.
+Currently, only `argon2`, `bcrypt`, `pbkdf2` and `scrypt` are supported.
+
+#### How to hash a password
+
+```sh
+echo -n "<password>" | yaldap tools hash <alogrithm> [<options>] -
+```
+
+For example, to hash a password using `bcrypt` and a cost of 10:
+
+```sh
+$ echo -n "password" | yaldap tools hash bcrypt --rounds 10 -
+$bcrypt$v=0$r=10$$243261243130247935525748646434736f52794a2e474f3162714856755331496c616e54384b4d387346494a746c6b3141776e7a6c36736f377a6471
+```
+
 ## Contribution
