@@ -2,6 +2,8 @@ package cmd
 
 import (
 	allow_fmt "fmt"
+	"io"
+	"os"
 
 	"github.com/aldy505/phc-crypto/argon2"
 	"github.com/aldy505/phc-crypto/bcrypt"
@@ -25,6 +27,9 @@ type (
 
 	HashCommon struct {
 		Password string `arg:"" name:"password" help:"Password to hash" required:""`
+
+		// This is a workaround to allow fmt.Println to be mocked in tests.
+		writer io.Writer `kong:"-"`
 	}
 
 	Argon2 struct {
@@ -63,6 +68,11 @@ func (h *HashCommon) prepare() {
 	if h.Password == "-" {
 		allow_fmt.Scanln(&h.Password)
 	}
+
+	// Set writer to stdout if not set (should be set in tests only)
+	if h.writer == nil {
+		h.writer = os.Stdout
+	}
 }
 
 func (a *Argon2) Run() error {
@@ -84,7 +94,7 @@ func (a *Argon2) Run() error {
 		return err
 	}
 
-	allow_fmt.Println(hash)
+	allow_fmt.Fprintln(a.writer, hash)
 	return nil
 }
 
@@ -101,7 +111,7 @@ func (s *Scrypt) Run() error {
 		return err
 	}
 
-	allow_fmt.Println(hash)
+	allow_fmt.Fprintln(s.writer, hash)
 	return nil
 }
 
@@ -114,7 +124,7 @@ func (b *Bcrypt) Run() error {
 		return err
 	}
 
-	allow_fmt.Println(hash)
+	allow_fmt.Fprintln(b.writer, hash)
 	return nil
 }
 
@@ -141,6 +151,6 @@ func (p *PBKDF2) Run() error {
 		return err
 	}
 
-	allow_fmt.Println(hash)
+	allow_fmt.Fprintln(p.writer, hash)
 	return nil
 }
