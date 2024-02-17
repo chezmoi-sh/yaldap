@@ -47,7 +47,7 @@ ENV PATH=/opt/yaldap:${PATH}
 
 USER yaldap
 WORKDIR /opt/yaldap
-ENTRYPOINT [ "yaldap" ]
+ENTRYPOINT yaldap
 
 EXPOSE 389
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

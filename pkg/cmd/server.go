@@ -21,7 +21,7 @@ import (
 )
 
 type Server struct {
-	Base `embed:""`
+	*Base `kong:"-"`
 
 	ListenAddr string `name:"listen-address" help:"Address to listen on" default:":389"`
 
