@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
 	"gopkg.in/yaml.v3"
 )
 

@@ -2,11 +2,11 @@
 
 yaLDAP is an easy-to-use LDAP server using YAML file as directory definition.
 
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/xunleii/yaldap)
-[![Go](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml/badge.svg)](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml)
-[![CodeQL](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml/badge.svg)](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml)
-[![codecov](https://codecov.io/gh/xunleii/yaldap/branch/main/graph/badge.svg?token=20J4XPYH1H)](https://codecov.io/gh/xunleii/yaldap)
-[![Go Report Card](https://goreportcard.com/badge/github.com/xunleii/yaldap)](https://goreportcard.com/report/github.com/xunleii/yaldap)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/chezmoi-sh/yaldap)
+[![Test code (Go)](https://github.com/chezmoi-sh/yaldap/actions/workflows/merge_group,pull_request.go.test.yaml/badge.svg?event=push)](https://github.com/chezmoi-sh/yaldap/actions/workflows/merge_group,pull_request.go.test.yaml)
+[![CodeQL](https://github.com/chezmoi-sh/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml/badge.svg)](https://github.com/chezmoi-sh/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml)
+[![codecov](https://codecov.io/gh/chezmoi-sh/yaldap/branch/main/graph/badge.svg?token=20J4XPYH1H)](https://codecov.io/gh/chezmoi-sh/yaldap)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chezmoi-sh/yaldap)](https://goreportcard.com/report/github.com/chezmoi-sh/yaldap)
 
 _Sometimes, we just need a simple LDAP compatible server to store user/group information and other information.  
 For this purpose, many simple LDAP server exists and manage user/group in a better way than yaLDAP. However, no one can

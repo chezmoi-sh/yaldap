@@ -3,9 +3,9 @@ package filters
 import (
 	"fmt"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 //nolint:gochecknoinits

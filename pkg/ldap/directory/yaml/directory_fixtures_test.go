@@ -3,10 +3,10 @@ package yamldir_test
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	yamldir "github.com/chezmoi-sh/yaldap/pkg/ldap/directory/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
 
 func TestFixture_Basic(t *testing.T) {

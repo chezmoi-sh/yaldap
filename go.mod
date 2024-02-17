@@ -1,4 +1,4 @@
-module github.com/xunleii/yaldap
+module github.com/chezmoi-sh/yaldap
 
 go 1.21
 

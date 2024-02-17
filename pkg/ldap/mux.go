@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/chezmoi-sh/yaldap/internal/ldap/auth"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/utils"
 	"github.com/jimlambrt/gldap"
-	"github.com/xunleii/yaldap/internal/ldap/auth"
-	"github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/utils"
 	"golang.org/x/exp/slices"
 )
 
