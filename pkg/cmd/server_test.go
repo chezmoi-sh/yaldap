@@ -3,7 +3,6 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
-	"log/slog"
 	"net"
 	"os"
 	"testing"
@@ -18,9 +17,10 @@ import (
 
 func TestServer_Defaults(t *testing.T) {
 	var actual, expected Server
+	actual.Base = &Base{}
+	expected.Base = &Base{}
+
 	expected.ListenAddr = ":389"
-	expected.Base.Log.Format = "json"
-	expected.Base.Log.Level = LogLevel(slog.LevelInfo)
 	expected.Backend.Name = "yaml"
 	expected.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml" //nolint:goconst
 	expected.SessionTTL = 168 * time.Hour
@@ -34,6 +34,7 @@ func TestServer_Defaults(t *testing.T) {
 
 func TestServer_YAML_Simple(t *testing.T) {
 	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
+	server.Base = &Base{}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
@@ -63,6 +64,7 @@ func TestServer_YAML_WithTLS(t *testing.T) {
 	require.NoError(t, err)
 
 	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
+	server.Base = &Base{}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
@@ -98,6 +100,7 @@ func TestServer_YAML_WithMutualTLS(t *testing.T) {
 	require.NoError(t, err)
 
 	server := Server{ListenAddr: fmt.Sprintf("localhost:%d", freePort(t))}
+	server.Base = &Base{}
 	server.Base.Log.Format = "test"
 	server.Backend.Name = "yaml"
 	server.Backend.URL = "file://../ldap/directory/yaml/fixtures/basic.yaml"
