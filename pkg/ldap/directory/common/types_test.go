@@ -1,3 +1,4 @@
+//nolint:goconst
 package common
 
 import (
@@ -218,24 +219,80 @@ func TestObjectBind(t *testing.T) {
 	// Test with correct password
 	password := "password123"
 	expectedResult := true
-	actualResult := obj.Bind(password)
+	actualResult, err := obj.Bind(password)
 
+	assert.NoError(t, err)
 	assert.Equal(t, expectedResult, actualResult)
 
 	// Test with incorrect password
 	password = "wrongpassword"
 	expectedResult = false
-	actualResult = obj.Bind(password)
+	actualResult, err = obj.Bind(password)
 
+	assert.NoError(t, err)
 	assert.Equal(t, expectedResult, actualResult)
 
 	// Test with no bind passwords
 	obj.BindPasswords = nil
 	password = "password123"
 	expectedResult = false
-	actualResult = obj.Bind(password)
+	actualResult, err = obj.Bind(password)
 
+	assert.NoError(t, err)
 	assert.Equal(t, expectedResult, actualResult)
+
+	// Test with unsupported PHC algorithm
+	obj.BindPasswords = []string{"$unknown$v=0$r=0$salt$hash"}
+	password = "password123"
+	expectedResult = false
+	actualResult, err = obj.Bind(password)
+
+	assert.EqualError(t, err, "unsupported PHC algorithm: unknown")
+	assert.Equal(t, expectedResult, actualResult)
+}
+
+func TestObjectBindWithHashedPassword(t *testing.T) {
+	tests := []struct {
+		Name           string
+		HashedPassword string
+		ExpectedResult bool
+	}{
+		{
+			Name:           "Test with argon2id",
+			HashedPassword: "$argon2id$v=19$m=65536,t=10,p=1$fc833b1da8729366224df547834badc7914906b7add02b6e709e1ffe4de56ed3$cbfe0dce36ac1d0db8d869b60cb0f264ea44b2e50d1376cfc4ff3412d73e38c7eebc9d07674b9337297edfe2f64877769b09bbb7f80ef974dc7263eb48002b9f", // yaldap_utils hash argon2 password123
+			ExpectedResult: true,
+		},
+		{
+			Name:           "Test with bcrypt",
+			HashedPassword: "$bcrypt$v=0$r=8$$243261243038244e4e78745643644d4f7a33442f6a37534e72345a7075586b772f416d58456a2f6e544856706f784b45656446547570332f41474743", // yaldap_utils hash bcrypt password123
+			ExpectedResult: true,
+		},
+		{
+			Name:           "Test with pbkdf2",
+			HashedPassword: "$pbkdf2sha256$v=0$i=10$67447629899eeb0d6fdb1e4d784a8a78$b467bb3ec3a9c4d46cf0fabb8207f4da139022836168fd29f1258f85f3c4bd6f", // yaldap_utils hash pbkdf2 password123
+			ExpectedResult: true,
+		},
+		{
+			Name:           "Test with scrypt",
+			HashedPassword: "$scrypt$v=0$ln=16,r=8,p=1$fca08f0f4120c4fd2b2d5e36a114d4fb$fd3db2ea0f59d547d0687ef64c7b2afcdc6f98cbd416442f3ccda41f62a66348", // yaldap_utils hash scrypt password123
+			ExpectedResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			obj := Object{
+				ImplObject: ImplObject{
+					BindPasswords: []string{tt.HashedPassword},
+				},
+			}
+
+			actualResult, err := obj.Bind("password123")
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.ExpectedResult, actualResult)
+		})
+	}
 }
 
 func TestObjectCanSearchOn(t *testing.T) {

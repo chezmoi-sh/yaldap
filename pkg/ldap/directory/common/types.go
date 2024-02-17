@@ -5,12 +5,17 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aldy505/phc-crypto/argon2"
+	"github.com/aldy505/phc-crypto/bcrypt"
+	"github.com/aldy505/phc-crypto/pbkdf2"
+	"github.com/aldy505/phc-crypto/scrypt"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
 	"github.com/moznion/go-optional"
 	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"github.com/xunleii/yaldap/pkg/ldap/filters"
+	"go.pact.im/x/phcformat"
 )
 
 type (
@@ -69,13 +74,33 @@ func (obj Object) Search(scope gldap.Scope, filter string) ([]ldap.Object, error
 }
 
 // Bind returns true if the current object is able to authenticate and the password is correct.
-// It returns false if the password is wrong and optional.None if it cannot be authenticated.
-func (obj Object) Bind(password string) bool {
+// It returns false if the password is wrong or not set.
+func (obj Object) Bind(password string) (bool, error) {
 	if obj.BindPasswords.IsNone() {
-		return false
+		return false, nil
+	}
+	bindPassword := obj.BindPasswords.Unwrap()
+
+	phcInfo, ok := phcformat.Parse(bindPassword)
+	if !ok {
+		// NOTE: if the password is not a valid PHC string, we assume it's a plain text password
+		// and we compare it directly with the stored password.
+		// NOT RECOMMENDED
+		return bindPassword == password, nil
 	}
 
-	return obj.BindPasswords.Unwrap() == password
+	switch {
+	case strings.HasPrefix(phcInfo.ID, "argon2"):
+		return argon2.Verify(bindPassword, password)
+	case phcInfo.ID == "bcrypt":
+		return bcrypt.Verify(bindPassword, password)
+	case strings.HasPrefix(phcInfo.ID, "pbkdf2"):
+		return pbkdf2.Verify(bindPassword, password)
+	case phcInfo.ID == "scrypt":
+		return scrypt.Verify(bindPassword, password)
+	default:
+		return false, fmt.Errorf("unsupported PHC algorithm: %s", phcInfo.ID)
+	}
 }
 
 // CanSearchOn returns true if the current object is able to perform a search on the given DN.

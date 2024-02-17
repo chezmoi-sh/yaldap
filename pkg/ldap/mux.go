@@ -69,7 +69,12 @@ func (s *server) bind(w *gldap.ResponseWriter, req *gldap.Request) {
 		return
 	}
 
-	if !obj.Bind(string(msg.Password)) {
+	isBinded, err := obj.Bind(string(msg.Password))
+	if err != nil {
+		log.Error("unable to bind user", slog.String("username", msg.UserName), slog.String("error", err.Error()))
+	}
+
+	if !isBinded {
 		log.Error("unable to bind user", slog.String("username", msg.UserName))
 		resp.SetResultCode(gldap.ResultInvalidCredentials)
 		// NOTE: we don't want to give any information about the user existence
