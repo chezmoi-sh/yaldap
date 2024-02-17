@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	common "github.com/xunleii/yaldap/pkg/ldap/directory/common"
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	common "github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
 	"gopkg.in/yaml.v3"
 )
 

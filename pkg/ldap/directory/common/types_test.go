@@ -4,9 +4,9 @@ package common
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	"github.com/jimlambrt/gldap"
 	"github.com/stretchr/testify/assert"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 func TestObjectDN(t *testing.T) {

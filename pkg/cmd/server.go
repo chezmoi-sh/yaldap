@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/chezmoi-sh/yaldap/internal/ldap/auth"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	yamldir "github.com/chezmoi-sh/yaldap/pkg/ldap/directory/yaml"
+	"github.com/chezmoi-sh/yaldap/pkg/utils"
 	"github.com/jimlambrt/gldap"
-	"github.com/xunleii/yaldap/internal/ldap/auth"
-	"github.com/xunleii/yaldap/pkg/ldap"
-	"github.com/xunleii/yaldap/pkg/ldap/directory"
-	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
-	"github.com/xunleii/yaldap/pkg/utils"
 	"golang.org/x/sync/errgroup"
 )
 

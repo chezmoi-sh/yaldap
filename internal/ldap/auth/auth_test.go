@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	"github.com/jimlambrt/gldap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 type mockLDAPObject map[string][]string

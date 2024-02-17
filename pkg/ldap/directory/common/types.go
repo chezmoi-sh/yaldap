@@ -9,12 +9,12 @@ import (
 	"github.com/aldy505/phc-crypto/bcrypt"
 	"github.com/aldy505/phc-crypto/pbkdf2"
 	"github.com/aldy505/phc-crypto/scrypt"
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/filters"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
 	"github.com/moznion/go-optional"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	"github.com/xunleii/yaldap/pkg/ldap/filters"
 	"go.pact.im/x/phcformat"
 )
 

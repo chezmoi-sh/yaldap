@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/xunleii/yaldap/pkg/cmd"
+	"github.com/chezmoi-sh/yaldap/pkg/cmd"
 )
 
 // yaLDAP represents the main application struct, interpretted by kong.
@@ -29,7 +29,7 @@ func main() {
 yaLDAP is an LDAP server that is backed by different read-only data sources,
 such as YAML files. It is intended to be lightweight, secure and easy to configure.
 
-    See https://github.com/xunleii/yaldap for more information.
+    See https://github.com/chezmoi-sh/yaldap for more information.
 `),
 		kong.UsageOnError(),
 	)

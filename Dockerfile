@@ -28,7 +28,7 @@ RUN set -eux; \
 # └───────────────────────────────────────────────────────────────────────────┘
 FROM docker.io/library/alpine:3.19.1
 
-# renovate: datasource=github-tags depName=xunleii/yaldap versioning=semver
+# renovate: datasource=github-tags depName=chezmoi-sh/yaldap versioning=semver
 ARG YALDAP_VERSION="v0.1.2"
 
 # renovate: datasource=repology depName=alpine_3_19/ca-certificates versioning=loose
@@ -59,10 +59,10 @@ LABEL \
     org.opencontainers.image.authors="xunleii <xunleii@users.noreply.github.com>" \
     org.opencontainers.image.created="01/01/1970T00:00:00.000" \
     org.opencontainers.image.description="Your identity, your rules." \
-    org.opencontainers.image.documentation="https://github.com/xunleii/yaldap" \
+    org.opencontainers.image.documentation="https://github.com/chezmoi-sh/yaldap" \
     org.opencontainers.image.licenses="AGPL-3.0" \
     org.opencontainers.image.revision="" \
     org.opencontainers.image.source="" \
     org.opencontainers.image.title="yaldap" \
-    org.opencontainers.image.url="https://github.com/xunleii/yaldap" \
+    org.opencontainers.image.url="https://github.com/chezmoi-sh/yaldap" \
     org.opencontainers.image.version=${YALDAP_VERSION}
