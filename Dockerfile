@@ -50,6 +50,8 @@ WORKDIR /opt/yaldap
 ENTRYPOINT [ "yaldap" ]
 
 EXPOSE 389
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD nc -z -w 2 localhost 389
 
 # metadata as defined by the Open Container Initiative (OCI) and using the 
 # xunleii conventions to keep traceability with the source code.
