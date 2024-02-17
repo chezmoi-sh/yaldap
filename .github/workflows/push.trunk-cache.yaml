@@ -1,0 +1,21 @@
+name: Refresh Trunk cache
+
+on:
+  push:
+    branches: [main]
+    paths: [.trunk/trunk.yaml]
+
+permissions: read-all
+
+jobs:
+  trunk-cache:
+    name: Refresh Trunk cache
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: trunk-io/trunk-action@97ecd21fe6c743bf7a606791584b683a7995c70e # v1.1.9
+        with:
+          check-mode: populate_cache_only
