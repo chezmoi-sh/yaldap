@@ -7,6 +7,8 @@ on:
       - go.mod
       - go.sum
       - .github/workflows/pull_request,push.go.test.yaml
+  push:
+    branches: [main]
 
 permissions: read-all
 

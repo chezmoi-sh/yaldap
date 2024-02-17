@@ -3,8 +3,8 @@ package yamldir
 import (
 	"fmt"
 
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/directory/common"
 	"github.com/moznion/go-optional"
-	"github.com/xunleii/yaldap/pkg/ldap/directory/common"
 	"gopkg.in/yaml.v3"
 )
 

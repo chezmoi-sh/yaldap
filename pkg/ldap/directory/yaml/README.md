@@ -48,6 +48,10 @@ dc:org: #dn: dc=org
     - Can be a scalar (one) or a sequence (several) node
     - **These values are not stored inside the attribute**
 
+> [!NOTE]
+> The `!!ldap/bind:password` handle hashed password during the `bind` operation.  
+> Currently, only `argon2`, `bcrypt`, `pbkdf2` and `scrypt` are supported. See [README.md](../../../../README.md) for more details.
+
 ### Extension: `go` template
 
 To extend the `YAML` syntax _(injecting secrets for example)_, the `YAML` parser will use the `text/template` package to parse the `YAML` file.

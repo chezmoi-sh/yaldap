@@ -1,4 +1,4 @@
-module github.com/xunleii/yaldap
+module github.com/chezmoi-sh/yaldap
 
 go 1.21
 
@@ -14,6 +14,7 @@ require (
 	github.com/prometheus/common v0.47.0
 	github.com/puzpuzpuz/xsync/v3 v3.0.2
 	github.com/stretchr/testify v1.8.4
+	go.pact.im/x/phcformat v0.0.6
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/sync v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -34,11 +35,13 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	go.pact.im/x/option v0.0.6 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 )
 
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+	github.com/aldy505/phc-crypto v1.2.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

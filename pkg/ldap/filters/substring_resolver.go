@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 	"golang.org/x/exp/slices"
 )
 

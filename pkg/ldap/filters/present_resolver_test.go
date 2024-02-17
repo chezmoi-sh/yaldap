@@ -3,11 +3,11 @@ package filters_test
 import (
 	"testing"
 
+	"github.com/chezmoi-sh/yaldap/pkg/ldap/filters"
 	ber "github.com/go-asn1-ber/asn1-ber"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xunleii/yaldap/pkg/ldap/filters"
 )
 
 func TestPresentResolver(t *testing.T) {

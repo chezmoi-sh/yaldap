@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chezmoi-sh/yaldap/internal/ldap/auth"
+	"github.com/chezmoi-sh/yaldap/pkg/ldap"
+	yamldir "github.com/chezmoi-sh/yaldap/pkg/ldap/directory/yaml"
 	goldap "github.com/go-ldap/ldap/v3"
 	"github.com/jimlambrt/gldap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/xunleii/yaldap/internal/ldap/auth"
-	"github.com/xunleii/yaldap/pkg/ldap"
-	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
 
 type (

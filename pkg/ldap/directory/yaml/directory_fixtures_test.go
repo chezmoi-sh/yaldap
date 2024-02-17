@@ -3,10 +3,10 @@ package yamldir_test
 import (
 	"testing"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
+	yamldir "github.com/chezmoi-sh/yaldap/pkg/ldap/directory/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
-	yamldir "github.com/xunleii/yaldap/pkg/ldap/directory/yaml"
 )
 
 func TestFixture_Basic(t *testing.T) {
@@ -150,7 +150,9 @@ func TestFixture_Basic(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("alice"))
+		isBind, err := obj.Bind("alice")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.True(t, obj.CanSearchOn("dc=org"))
 	})
 
@@ -169,7 +171,9 @@ func TestFixture_Basic(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("bob"))
+		isBind, err := obj.Bind("bob")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("ou=group,dc=example,dc=org"))
 	})
@@ -213,7 +217,9 @@ func TestFixture_Basic(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("charlie"))
+		isBind, err := obj.Bind("charlie")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("ou=group,dc=example,dc=org"))
 		assert.False(t, obj.CanSearchOn("cn=owner,ou=group,dc=example,dc=org"))
@@ -258,7 +264,9 @@ func TestFixture_Basic(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.False(t, obj.Bind("eve"))
+		isBind, err := obj.Bind("eve")
+		require.NoError(t, err)
+		assert.False(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.False(t, obj.CanSearchOn("ou=group,dc=example,dc=org"))
 		assert.False(t, obj.CanSearchOn("c=fr,dc=example,dc=org"))
@@ -374,7 +382,9 @@ func TestFixture_Templated(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("bind"))
+		isBind, err := obj.Bind("bind")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.True(t, obj.CanSearchOn("dc=org"))
 	})
 
@@ -397,7 +407,9 @@ func TestFixture_Templated(t *testing.T) {
 			obj.Attributes(),
 		)
 
-		assert.True(t, obj.Bind("alice"))
+		isBind, err := obj.Bind("alice")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("cn=alice,ou=people,dc=example,dc=org"))
 	})
@@ -420,7 +432,9 @@ func TestFixture_Templated(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("bob"))
+		isBind, err := obj.Bind("bob")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("cn=bob,ou=people,dc=example,dc=org"))
 	})
@@ -443,7 +457,9 @@ func TestFixture_Templated(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("charlie"))
+		isBind, err := obj.Bind("charlie")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("cn=charlie,ou=people,dc=example,dc=org"))
 	})
@@ -466,7 +482,9 @@ func TestFixture_Templated(t *testing.T) {
 			},
 			obj.Attributes(),
 		)
-		assert.True(t, obj.Bind("eve"))
+		isBind, err := obj.Bind("eve")
+		require.NoError(t, err)
+		assert.True(t, isBind)
 		assert.False(t, obj.CanSearchOn("dc=org"))
 		assert.True(t, obj.CanSearchOn("cn=eve,ou=people,dc=example,dc=org"))
 	})

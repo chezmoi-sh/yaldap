@@ -56,7 +56,7 @@ dc:org: #dn: dc=org
           homeDirectory: /home/bob
           uidNumber: 1001
           gidNumber: 1001
-          userPassword: !!ldap/bind:password  bob
+          userPassword: !!ldap/bind:password bob
 
     c:de: #dn: c=de,dc=example,dc=org
       objectClass: [top, country]

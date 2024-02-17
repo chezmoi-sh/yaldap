@@ -2,11 +2,11 @@
 
 yaLDAP is an easy-to-use LDAP server using YAML file as directory definition.
 
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/xunleii/yaldap)
-[![Go](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml/badge.svg)](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push.go.test.yaml)
-[![CodeQL](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml/badge.svg)](https://github.com/xunleii/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml)
-[![codecov](https://codecov.io/gh/xunleii/yaldap/branch/main/graph/badge.svg?token=20J4XPYH1H)](https://codecov.io/gh/xunleii/yaldap)
-[![Go Report Card](https://goreportcard.com/badge/github.com/xunleii/yaldap)](https://goreportcard.com/report/github.com/xunleii/yaldap)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/chezmoi-sh/yaldap)
+[![Test code (Go)](https://github.com/chezmoi-sh/yaldap/actions/workflows/merge_group,pull_request.go.test.yaml/badge.svg?event=push)](https://github.com/chezmoi-sh/yaldap/actions/workflows/merge_group,pull_request.go.test.yaml)
+[![CodeQL](https://github.com/chezmoi-sh/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml/badge.svg)](https://github.com/chezmoi-sh/yaldap/actions/workflows/pull_request,push,schedule.codeql.yaml)
+[![codecov](https://codecov.io/gh/chezmoi-sh/yaldap/branch/main/graph/badge.svg?token=20J4XPYH1H)](https://codecov.io/gh/chezmoi-sh/yaldap)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chezmoi-sh/yaldap)](https://goreportcard.com/report/github.com/chezmoi-sh/yaldap)
 
 _Sometimes, we just need a simple LDAP compatible server to store user/group information and other information.  
 For this purpose, many simple LDAP server exists and manage user/group in a better way than yaLDAP. However, no one can
@@ -101,6 +101,24 @@ dc:org: #dn: dc=org
           uidNumber: 1003
           gidNumber: 1002
           userPassword: eve
+```
+
+### Hashed passwords
+
+In order to avoid storing clear text passwords in the YAML file, yaLDAP supports hashed passwords.
+Currently, only `argon2`, `bcrypt`, `pbkdf2` and `scrypt` are supported.
+
+#### How to hash a password
+
+```sh
+echo -n "<password>" | yaldap tools hash <alogrithm> [<options>] -
+```
+
+For example, to hash a password using `bcrypt` and a cost of 10:
+
+```sh
+$ echo -n "password" | yaldap tools hash bcrypt --rounds 10 -
+$bcrypt$v=0$r=10$$243261243130247935525748646434736f52794a2e474f3162714856755331496c616e54384b4d387346494a746c6b3141776e7a6c36736f377a6471
 ```
 
 ## Contribution

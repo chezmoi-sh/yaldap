@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	ldap "github.com/chezmoi-sh/yaldap/pkg/ldap/directory"
 	xsync "github.com/puzpuzpuz/xsync/v3"
-	ldap "github.com/xunleii/yaldap/pkg/ldap/directory"
 )
 
 type (
