@@ -8,6 +8,8 @@ on:
       - go.sum
       - .github/workflows/pull_request,push.go.test.yaml
 
+permissions: read-all
+
 jobs:
   test:
     name: Go test

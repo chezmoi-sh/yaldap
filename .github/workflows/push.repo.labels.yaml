@@ -4,15 +4,17 @@ on:
     branches: [main]
     paths: [.github/workflows/push.repo.labels.yaml, .github/labels.yaml]
 
+permissions: read-all
+
 jobs:
   sync:
     name: Synchronize labels
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-    - uses: micnncim/action-label-syncer@3abd5ab72fda571e69fffd97bd4e0033dd5f495c # renovate: tag=v1.3.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        manifest: .github/labels.yaml
-        prune: true
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: micnncim/action-label-syncer@3abd5ab72fda571e69fffd97bd4e0033dd5f495c # renovate: tag=v1.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manifest: .github/labels.yaml
+          prune: true

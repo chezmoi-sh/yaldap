@@ -1,4 +1,5 @@
 # yaLDAP: yet another LDAP
+
 yaLDAP is an easy-to-use LDAP server using YAML file as directory definition.
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/xunleii/yaldap)
@@ -8,16 +9,17 @@ yaLDAP is an easy-to-use LDAP server using YAML file as directory definition.
 [![Go Report Card](https://goreportcard.com/badge/github.com/xunleii/yaldap)](https://goreportcard.com/report/github.com/xunleii/yaldap)
 
 _Sometimes, we just need a simple LDAP compatible server to store user/group information and other information.  
-For this purpose, many simple LDAP server exists and manage user/group in a better way than yaLDAP. However, no one can 
-have a fully customisable LDAP directory that can be used to store information or to follow a specific directory structure.
-**I don't recommend to use this project for other thing than dev or homelab purpose; this LDAP server is not _(yet)_ 
-compliant with the LDAP RFCs.**_
+For this purpose, many simple LDAP server exists and manage user/group in a better way than yaLDAP. However, no one can
+have a fully customisable LDAP directory that can be used to store information or to follow a specific directory structure._  
+**_I don't recommend to use this project for other thing than dev or homelab purpose; this LDAP server is not _(yet)_
+compliant with the LDAP RFCs._**
 
 ## Usage
 
 ## Configuration
 
 ### YAML
+
 yaLDAP can be configured using an YAML file to describe the LDAP directory.
 
 See [/pkg/ldap/yaml](pkg/ldap/directory/yaml/README.md) for more information.
@@ -28,7 +30,7 @@ See [/pkg/ldap/yaml](pkg/ldap/directory/yaml/README.md) for more information.
 dc:org: #dn: dc=org
   dc:example: #dn: dc=example,dc=org
     ou:group: #dn: ou=group,dc=example,dc=org
-      cn:owner: &test #dn: cn=admin,ou=group,dc=example,dc=org      
+      cn:owner: &test #dn: cn=admin,ou=group,dc=example,dc=org
         objectClass: posixGroup
         gidNumber: 1000
         description: Organization owners
@@ -73,7 +75,7 @@ dc:org: #dn: dc=org
           homeDirectory: /home/bob
           uidNumber: 1001
           gidNumber: 1001
-          userPassword: !!ldap/bind:password  bob
+          userPassword: !!ldap/bind:password bob
 
     c:fr: #dn: c=fr,dc=example,dc=org
       ou:people: #dn: ou=people,c=fr,dc=example,dc=org
